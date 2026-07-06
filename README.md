@@ -166,4 +166,4 @@ MVP+：积分排名、最近空位推荐。
 | 前端 | [client/](client/) | 客户端设计与实现指南 |
 | 后端 | [server/](server/) | 服务端设计与实现指南 |
 
-> **当前阶段仅生成文档，不实现业务代码。** 代码实现请按 `ROADMAP.md` 分阶段进行，并遵守 `AGENTS.md` / `CLAUDE.md` 约束。
+> 代码实现请按 `ROADMAP.md` 分阶段进行，并遵守 `AGENTS.md` / `CLAUDE.md` 约束。
