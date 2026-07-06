@@ -1,0 +1,64 @@
+# SeatWise Campus · 智能校园自习室预约管理平台
+
+> C/S 架构高校自习室在线预约系统。client（Vue3）+ server（Spring Boot 3.5 / MySQL8 / Redis7 / Redisson / Sa-Token）。
+> 核心：30 分钟时间片并发选座（Redisson 锁 + MySQL 唯一索引兜底）、初始化快照 + SSE 实时座位看板。
+> 当前阶段：仅文档与 Agent 指令，未实现业务代码。术语见 GLOSSARY.md。
+
+## 最重要的文档
+- [README](README.md): 项目入口、技术栈、目录、开发顺序
+- [PROJECT_CONTEXT](PROJECT_CONTEXT.md): 全局上下文、角色、MVP 边界、非目标
+- [GLOSSARY](GLOSSARY.md): 统一术语（中文/英文/代码/表名）
+- [ROADMAP](ROADMAP.md): 开发路线图 P0-P9
+
+## Agent 指令入口
+- [AGENTS](AGENTS.md): 通用 Coding Agent 规则（Codex/opencode）
+- [CLAUDE](CLAUDE.md): Claude Code 规则
+- [client/AGENTS](client/AGENTS.md): 前端专属约束
+- [server/AGENTS](server/AGENTS.md): 后端专属约束
+
+## 通用设计文档
+- [文档导读](docs/00-documentation-guide.md)
+- [需求规格](docs/01-requirements.md)
+- [系统架构](docs/02-system-architecture.md)
+- [核心业务流程](docs/03-core-business-flows.md)
+- [MVP 范围](docs/04-mvp-scope.md)
+- [扩展设计](docs/05-extension-design.md)
+- [演示脚本](docs/06-demo-script.md)
+- [验收清单](docs/07-acceptance-checklist.md)
+
+## client 前端文档入口
+- [前端总览](client/README.md)
+- [客户端架构](client/00-client-overview.md)
+- [页面路由表](client/01-page-route-map.md)
+- [学生端设计](client/02-student-side-design.md)
+- [管理员端设计](client/03-admin-side-design.md)
+- [座位网格与热力图](client/04-seat-grid-and-heatmap.md)
+- [组件设计](client/05-component-design.md)
+- [状态管理](client/06-state-management.md)
+- [API 调用设计](client/07-api-calling-design.md)
+- [前端校验与错误处理](client/08-frontend-validation-and-error-handling.md)
+- [前端测试验收](client/09-client-test-and-acceptance.md)
+- [前端实现指南(LLM)](client/10-llm-client-implementation-guide.md)
+
+## server 后端文档入口
+- [后端总览](server/README.md)
+- [服务端架构](server/00-server-overview.md)
+- [领域模型](server/01-domain-model.md)
+- [数据库设计](server/02-database-schema.md)
+- [API 设计](server/03-api-design.md)
+- [认证鉴权](server/04-auth-rbac.md)
+- [预约并发控制](server/05-reservation-concurrency-control.md)
+- [超时释放与黑名单](server/06-timeout-release-and-blacklist.md)
+- [SSE 实时看板](server/07-sse-realtime-board.md)
+- [统计报表](server/08-statistics-reporting.md)
+- [积分排名设计](server/09-score-ranking-design.md)
+- [最近空位推荐设计](server/10-nearest-available-room-design.md)
+- [Docker Compose 部署](server/11-deployment-docker-compose.md)
+- [后端测试验收](server/12-server-test-and-acceptance.md)
+- [后端实现指南(LLM)](server/13-llm-server-implementation-guide.md)
+
+## 关键入口速查
+- API 文档: server/03-api-design.md（运行后 Knife4j: /doc.html）
+- 数据库设计: server/02-database-schema.md
+- MVP 实现: docs/04-mvp-scope.md + server/13 + client/10
+- 扩展功能: docs/05-extension-design.md + server/09 + server/10
