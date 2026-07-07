@@ -74,5 +74,8 @@
 - MVP：一至七 + 九 + 十全部通过。
 - MVP+：追加第八节对应项。
 
+## 十一、已知问题 / 待修复项
+已知问题已集中迁移至 [docs/08-known-issues.md](08-known-issues.md)。此章节不再维护，修复进展以 `docs/08` 为准。
+
 ## 给 AI Coding Agent 的提示
 提交前对照本清单自检；红线项必须有对应自动化/半自动测试（见 [server/12](../server/12-server-test-and-acceptance.md)）。

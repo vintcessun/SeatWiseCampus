@@ -37,10 +37,9 @@
 | POST | `/api/auth/login` | 公共 | 登录 |
 | POST | `/api/auth/logout` | 登录 | 登出 |
 
-请求 `POST /api/auth/login`：
-```json
-{ "username": "student1", "password": "***" }
-```
+> **注册功能**当前不纳入 MVP，用户由管理员预置 / 种子数据初始化。注册接口 `POST /api/auth/register` 为后续扩展预留。详见 [docs/05-extension-design.md](../docs/05-extension-design.md)。
+
+> **密码安全**：当前登录接口密码以**明文传输**，存在安全隐患。生产环境必须启用 HTTPS；后端存储时需对密码加密（具体加密算法待确认）。详见 [docs/08-known-issues.md](../docs/08-known-issues.md) §P4。
 响应：
 ```json
 { "code":0,"message":"ok","data":{ "token":"...","role":"STUDENT","userInfo":{"id":1,"realName":"张三","creditScore":10} } }

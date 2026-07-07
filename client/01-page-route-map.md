@@ -55,6 +55,11 @@ STUDENT:     /student/**
 ADMIN:       /admin/**
 ```
 
+## 五、缺项备注
+
+### 已知问题
+当前发现的已知问题（排布缺陷、黑名单操作、时间校验、密码传输等）已集中迁移至 [docs/08-known-issues.md](../docs/08-known-issues.md)。此章节不再维护，详细信息以 `docs/08` 为准。
+
 ## 实现约束
 - 角色守卫在 router 层；黑名单态不拦截读页面，仅在预约动作时由后端拦截。
 - 【可选】页面在 MVP 阶段可用 feature flag 隐藏入口。
