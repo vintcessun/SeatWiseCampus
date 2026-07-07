@@ -1,0 +1,55 @@
+package com.seatwise.service;
+
+import cn.dev33.satoken.stp.StpUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.seatwise.common.BizError;
+import com.seatwise.common.BizException;
+import com.seatwise.dto.LoginDTO;
+import com.seatwise.entity.User;
+import com.seatwise.mapper.UserMapper;
+import com.seatwise.vo.LoginVO;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.BeanUtils;
+
+@Service
+@RequiredArgsConstructor
+public class AuthService {
+
+    private final UserMapper userMapper;
+
+    public LoginVO login(LoginDTO dto) {
+        User user = userMapper.selectOne(new LambdaQueryWrapper<User>()
+                .eq(User::getUsername, dto.getUsername()));
+        if (user == null || !user.getPassword().equals(dto.getPassword())) {
+            throw new BizException(BizError.LOGIN_FAILED);
+        }
+        StpUtil.login(user.getId());
+        StpUtil.getSession().set("role", user.getRole());
+
+        LoginVO vo = new LoginVO();
+        vo.setToken(StpUtil.getTokenValue());
+        vo.setRole(user.getRole());
+        vo.setUserInfo(toInfo(user));
+        return vo;
+    }
+
+    public LoginVO.UserInfo me() {
+        Long uid = currentUserId();
+        User user = userMapper.selectById(uid);
+        if (user == null) {
+            throw new BizException(BizError.AUTH_REQUIRED);
+        }
+        return toInfo(user);
+    }
+
+    public Long currentUserId() {
+        return Long.valueOf(StpUtil.getLoginId().toString());
+    }
+
+    private LoginVO.UserInfo toInfo(User user) {
+        LoginVO.UserInfo info = new LoginVO.UserInfo();
+        BeanUtils.copyProperties(user, info);
+        return info;
+    }
+}

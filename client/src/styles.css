@@ -1,0 +1,52 @@
+:root {
+  --sw-bg: #f4f6fb;
+  --sw-primary: #3b6cff;
+}
+
+* { box-sizing: border-box; }
+html, body, #app { height: 100%; margin: 0; }
+body {
+  font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+  background: var(--sw-bg);
+  color: #1f2430;
+}
+
+.page { padding: 20px; }
+.page-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.page-sub { color: #8a93a6; font-size: 13px; margin-bottom: 18px; }
+
+.brand {
+  display: flex; align-items: center; gap: 10px;
+  font-weight: 800; font-size: 18px; color: #fff;
+}
+.brand .logo {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: linear-gradient(135deg, #5b8cff, #8f5bff);
+  display: grid; place-items: center; font-size: 16px;
+}
+
+/* 座位网格 */
+.seat-grid { display: inline-grid; gap: 8px; }
+.seat-cell {
+  width: 40px; height: 40px; border-radius: 8px;
+  display: grid; place-items: center;
+  font-size: 11px; font-weight: 600; user-select: none;
+  transition: transform .08s;
+}
+.seat-cell.clickable { cursor: pointer; }
+.seat-cell.clickable:hover { transform: translateY(-2px); }
+.seat-FREE { background: #e3f6e9; color: #1f9d55; border: 1px solid #b7e6c6; }
+.seat-RESERVED { background: #fff2dd; color: #d98a00; border: 1px solid #ffd699; }
+.seat-USING { background: #ffe1e1; color: #d64545; border: 1px solid #ffb3b3; }
+.seat-DISABLED { background: #e9ecf2; color: #a2abbd; border: 1px solid #d5dae4; }
+.seat-mine { outline: 3px solid #3b6cff; outline-offset: 1px; }
+.seat-AISLE, .seat-EMPTY { background: transparent; color: #c2c9d6; }
+.seat-selected { outline: 3px solid #8f5bff; outline-offset: 1px; }
+
+.legend { display: flex; gap: 16px; flex-wrap: wrap; margin: 12px 0; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #5a6172; }
+.legend-dot { width: 14px; height: 14px; border-radius: 4px; }
+
+.stat-card { text-align: center; padding: 6px 0; }
+.stat-card .num { font-size: 26px; font-weight: 800; }
+.stat-card .lbl { font-size: 12px; color: #8a93a6; }
