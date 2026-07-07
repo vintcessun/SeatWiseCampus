@@ -25,6 +25,7 @@
 - [扩展设计](docs/05-extension-design.md)
 - [演示脚本](docs/06-demo-script.md)
 - [验收清单](docs/07-acceptance-checklist.md)
+- [已知问题](docs/08-known-issues.md)
 
 ## client 前端文档入口
 - [前端总览](client/README.md)
