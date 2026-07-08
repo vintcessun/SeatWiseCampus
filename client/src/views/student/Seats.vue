@@ -48,11 +48,11 @@ import { ElMessage } from 'element-plus'
 import SeatGrid from '../../components/SeatGrid.vue'
 import { boardApi, reservationApi } from '../../api'
 import { connectBoardStream } from '../../api/boardStream'
+import { todayLocal } from '../../utils/date'
 
 const route = useRoute()
 const roomId = route.params.roomId
-const today = new Date().toISOString().slice(0, 10)
-const date = ref(today)
+const date = ref(todayLocal())
 const start = ref('14:00')
 const end = ref('16:00')
 const board = reactive({ seats: [], cols: 8, roomName: '' })

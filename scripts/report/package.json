@@ -1,0 +1,9 @@
+{
+  "name": "seatwise-report",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "docx": "^9.0.2",
+    "puppeteer": "^23.6.0"
+  }
+}

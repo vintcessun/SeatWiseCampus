@@ -1,1 +1,10 @@
 .idea/
+
+# 构建产物 / 依赖
+node_modules/
+dist/
+target/
+*.log
+
+# 演示截图临时目录（可由 scripts/report/shots-cdp.mjs 重新生成）
+scripts/report/shots/

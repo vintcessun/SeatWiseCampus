@@ -38,11 +38,12 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { LocationInformation } from '@element-plus/icons-vue'
 import { baseApi, nearbyApi } from '../../api'
+import { todayLocal } from '../../utils/date'
 
 const router = useRouter()
 const buildings = ref([])
 const buildingId = ref(null)
-const date = ref(new Date().toISOString().slice(0, 10))
+const date = ref(todayLocal())
 const start = ref('14:00')
 const end = ref('16:00')
 const list = ref([])
