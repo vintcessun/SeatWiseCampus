@@ -12,7 +12,7 @@ public class ScoreRecord {
     private Long id;
     private Long userId;
     @TableField("score_change")
-    private Integer change;
+    private Integer scoreChange;
     private String reason;        // CHECKOUT_OK/CANCEL_LATE/NO_SHOW/NO_CHECKOUT
     private Long refReservationId;
     @TableField(fill = FieldFill.INSERT)

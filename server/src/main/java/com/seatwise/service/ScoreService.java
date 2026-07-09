@@ -32,7 +32,7 @@ public class ScoreService {
         }
         ScoreRecord rec = new ScoreRecord();
         rec.setUserId(userId);
-        rec.setChange(change);
+        rec.setScoreChange(change);
         rec.setReason(reason);
         rec.setRefReservationId(refReservationId);
         scoreMapper.insert(rec);
