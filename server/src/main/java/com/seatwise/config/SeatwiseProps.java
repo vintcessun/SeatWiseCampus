@@ -27,4 +27,6 @@ public class SeatwiseProps {
     private int holdSeconds = 90;
     /** 组队相邻预约单次最多座位数 */
     private int groupMaxSeats = 6;
+    /** 预约开始前多少分钟推送「即将开始」提醒 */
+    private int remindBeforeMinutes = 30;
 }

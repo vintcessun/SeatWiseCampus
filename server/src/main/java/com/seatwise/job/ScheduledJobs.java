@@ -1,6 +1,7 @@
 package com.seatwise.job;
 
 import com.seatwise.entity.Reservation;
+import com.seatwise.service.ReminderService;
 import com.seatwise.service.ReservationService;
 import com.seatwise.service.WaitlistService;
 import com.seatwise.sse.SseManager;
@@ -27,6 +28,7 @@ public class ScheduledJobs {
 
     private final ReservationService reservationService;
     private final WaitlistService waitlistService;
+    private final ReminderService reminderService;
     private final SseManager sse;
     private final UserSseManager userSse;
 
@@ -34,6 +36,7 @@ public class ScheduledJobs {
     public void releaseAndComplete() {
         LocalDateTime now = LocalDateTime.now();
         try {
+            reminderService.runReminders();
             List<Reservation> pending = reservationService.findByStatus("PENDING_SIGN_IN");
             for (Reservation r : pending) {
                 if (now.isAfter(reservationService.signinDeadline(r))) {

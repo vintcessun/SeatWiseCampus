@@ -26,8 +26,9 @@ flowchart LR
 - **推送**：发布时若勾选「同时通知」，对所有学生 `NotificationService.notify(type=ANNOUNCEMENT)`。
 - **验收**：`scripts/test-announcement.mjs` —— 发布→学生可见→（勾选推送）学生通知 +1→下线后不可见。
 
-## ⑨ 预约提醒（Reminder）
+## ⑨ 预约提醒（Reminder）✅ 已实现 2026-07-09
 - **价值**：闭合「我不知道啥时候能签到」的体验缺陷。定时任务在**签到窗口开放时**给用户推一条「可以签到了」；并在**预约开始前 N 分钟**推「即将开始」提醒。
+- **落地**：`ReminderService.runReminders()` 由 `ScheduledJobs`（每 5s）调用；Redis 键 `remind:soon:{id}` / `remind:signin:{id}` 去重保证每类每预约只推一次；通知 type=`REMINDER`。配置 `seatwise.remind-before-minutes`（默认 30）。测试 `scripts/test-reminder.mjs` 5/5（含幂等）。
 - **实现**：`ScheduledJobs` 增量扫描 `PENDING_SIGN_IN`；用 Redis Set/标志位保证每类提醒每预约只推一次（幂等）。复用 `NotificationService`（type=`REMINDER`）。
 - **配置**：`seatwise.remind-before-minutes`（默认 10）。
 - **验收**：`scripts/test-reminder.mjs` —— 构造一个「签到窗口已开放」的预约，跑一次提醒逻辑后该用户收到 REMINDER 通知，且重复跑不重复推送。
