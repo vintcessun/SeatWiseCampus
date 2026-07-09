@@ -3,7 +3,9 @@
 /app/src/main/java/com/seatwise/common/BizException.java
 /app/src/main/java/com/seatwise/common/GlobalExceptionHandler.java
 /app/src/main/java/com/seatwise/common/R.java
+/app/src/main/java/com/seatwise/common/SeatTags.java
 /app/src/main/java/com/seatwise/common/SlotUtil.java
+/app/src/main/java/com/seatwise/config/AiProps.java
 /app/src/main/java/com/seatwise/config/BeanConfig.java
 /app/src/main/java/com/seatwise/config/DataInitializer.java
 /app/src/main/java/com/seatwise/config/MyBatisMetaHandler.java
@@ -11,6 +13,7 @@
 /app/src/main/java/com/seatwise/config/SeatwiseProps.java
 /app/src/main/java/com/seatwise/config/StpInterfaceImpl.java
 /app/src/main/java/com/seatwise/config/WebConfig.java
+/app/src/main/java/com/seatwise/controller/AiController.java
 /app/src/main/java/com/seatwise/controller/AuthController.java
 /app/src/main/java/com/seatwise/controller/BaseDataController.java
 /app/src/main/java/com/seatwise/controller/BlacklistController.java
@@ -41,6 +44,7 @@
 /app/src/main/java/com/seatwise/mapper/SeatMapper.java
 /app/src/main/java/com/seatwise/mapper/StudyRoomMapper.java
 /app/src/main/java/com/seatwise/mapper/UserMapper.java
+/app/src/main/java/com/seatwise/service/AiService.java
 /app/src/main/java/com/seatwise/service/AuthService.java
 /app/src/main/java/com/seatwise/service/BaseDataService.java
 /app/src/main/java/com/seatwise/service/BoardService.java
@@ -49,6 +53,7 @@
 /app/src/main/java/com/seatwise/service/ReservationService.java
 /app/src/main/java/com/seatwise/service/ScoreService.java
 /app/src/main/java/com/seatwise/sse/SseManager.java
+/app/src/main/java/com/seatwise/vo/AiReplyVO.java
 /app/src/main/java/com/seatwise/vo/BoardVO.java
 /app/src/main/java/com/seatwise/vo/LoginVO.java
 /app/src/main/java/com/seatwise/vo/ReservationVO.java

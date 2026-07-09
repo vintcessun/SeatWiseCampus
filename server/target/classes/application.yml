@@ -46,6 +46,13 @@ seatwise:
   daily-limit: ${SEATWISE_DAILY_LIMIT:3}
   max-slots-per-reservation: ${SEATWISE_MAX_SLOTS_PER_RESERVATION:8}
 
+# AI 助手（OpenAI 兼容接口；不配置 AI_API_KEY 则走离线规则引擎）
+ai:
+  base-url: ${AI_BASE_URL:}
+  api-key: ${AI_API_KEY:}
+  model: ${AI_MODEL:gpt-4o-mini}
+  timeout-ms: ${AI_TIMEOUT_MS:12000}
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html

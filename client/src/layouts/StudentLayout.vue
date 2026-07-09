@@ -25,6 +25,7 @@
         <router-view />
       </el-main>
     </el-container>
+    <AiAssistant />
   </el-container>
 </template>
 
@@ -32,6 +33,7 @@
 import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
+import AiAssistant from '../components/AiAssistant.vue'
 
 const route = useRoute()
 const router = useRouter()

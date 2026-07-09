@@ -43,6 +43,10 @@ export const nearbyApi = {
   nearest: (params) => http.get('/rooms/nearest-available', { params })
 }
 
+export const aiApi = {
+  assistant: (data) => http.post('/ai/assistant', data)
+}
+
 export const blacklistApi = {
   me: () => http.get('/blacklist/me'),
   list: () => http.get('/admin/blacklist'),

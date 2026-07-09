@@ -46,6 +46,10 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       TZ: Asia/Shanghai
+      # AI 助手（可选）：配置后启用大模型，缺省走离线规则引擎
+      AI_BASE_URL: ${AI_BASE_URL:-}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-gpt-4o-mini}
     ports:
       - "18080:8080"
 

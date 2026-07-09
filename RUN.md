@@ -55,6 +55,16 @@ node scripts/timeout-test.mjs
 docker rm -f seatwise-backend-tmp
 ```
 
+## AI 智能选座助手（LLM）
+学生端右下角 🤖 悬浮助手：一句话说需求 → 可解释座位推荐（详见 [server/14-ai-assistant-design.md](server/14-ai-assistant-design.md)）。
+- **默认离线可用**：不配置密钥即走规则引擎，演示无需联网。
+- **接入大模型（OpenAI 兼容）**：设置环境变量后 `docker compose up -d backend` 即启用：
+```bash
+export AI_BASE_URL=https://api.deepseek.com/v1   # 或 OpenAI/通义千问兼容端点
+export AI_API_KEY=sk-xxxx
+export AI_MODEL=deepseek-chat                     # 或 gpt-4o-mini / qwen-plus
+```
+
 ## 本地开发（可选，不走容器）
 - 后端：需 JDK 21 + Maven；`MYSQL_HOST/REDIS_HOST` 指向本机依赖后 `mvn spring-boot:run`。
 - 前端：`cd client && npm install && npm run dev`（Vite 代理 `/api` 到 8080），访问 http://localhost:5173
