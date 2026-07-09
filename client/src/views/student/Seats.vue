@@ -45,8 +45,20 @@
       <el-button v-if="groupSeats.length" @click="groupSeats = []">清空</el-button>
     </el-card>
 
+    <el-card v-if="myHere.length" shadow="never" style="margin-bottom:16px;border:1px solid #3b6cff22">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-weight:600">📍 我在本自习室今日的预约</span>
+        <el-tag v-for="r in myHere" :key="r.id" :type="r.status==='IN_USE' ? 'danger' : 'warning'"
+          effect="plain" class="mine-chip" @click="locate(r.seatId)">
+          {{ r.seatNo }} · {{ r.startTime }}-{{ r.endTime }} · {{ r.status==='IN_USE' ? '使用中' : '待签到' }}
+        </el-tag>
+        <span style="color:#8a93a6;font-size:12px">点击可在座位图中定位</span>
+      </div>
+    </el-card>
+
     <el-card shadow="never">
-      <SeatGrid :cells="board.seats || []" :cols="board.cols || 8" :now-ms="nowMs" :selected-ids="selectedIds" selectable @select="onSelect" />
+      <SeatGrid :cells="board.seats || []" :cols="board.cols || 8" :now-ms="nowMs"
+        :selected-ids="selectedIds" :selected-seat-id="flashId" selectable @select="onSelect" />
     </el-card>
 
     <el-dialog v-model="dialog" title="确认预约" width="380px" @close="onDialogClose">
@@ -167,11 +179,29 @@ onMounted(() => {
   reload(); openStream()
   ticker = setInterval(() => { nowMs.value = Date.now() }, 1000)
 })
-onBeforeUnmount(() => { if (stream) stream.close(); if (ticker) clearInterval(ticker); releaseCurrent() })
+onBeforeUnmount(() => { if (stream) stream.close(); if (ticker) clearInterval(ticker); if (flashTimer) clearTimeout(flashTimer); releaseCurrent() })
+
+const myHere = ref([])
+const flashId = ref(null)
+let flashTimer = null
+async function loadMine() {
+  try {
+    const list = await reservationApi.mine()
+    myHere.value = (list || []).filter(r => String(r.roomId) === String(roomId)
+      && r.date === date.value && ['PENDING_SIGN_IN', 'IN_USE'].includes(r.status))
+  } catch (e) { myHere.value = [] }
+}
+function locate(seatId) {
+  flashId.value = null
+  requestAnimationFrame(() => { flashId.value = seatId })
+  if (flashTimer) clearTimeout(flashTimer)
+  flashTimer = setTimeout(() => { flashId.value = null }, 2400)
+}
 
 async function reload() {
   const data = await boardApi.snapshot(roomId, { date: date.value, start: start.value, end: end.value })
   Object.assign(board, data)
+  loadMine()
 }
 function onWindowChange() { openStream(); reload() }
 
@@ -260,3 +290,8 @@ function releaseCurrent() {
   }
 }
 </script>
+
+<style scoped>
+.mine-chip { cursor: pointer; transition: transform .1s; }
+.mine-chip:hover { transform: translateY(-1px); }
+</style>
