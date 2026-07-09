@@ -23,7 +23,8 @@ const routes = [
     component: () => import('../layouts/AdminLayout.vue'),
     meta: { role: 'ADMIN' },
     children: [
-      { path: '', redirect: '/admin/rooms' },
+      { path: '', redirect: '/admin/dashboard' },
+      { path: 'dashboard', component: () => import('../views/admin/Home.vue') },
       { path: 'rooms', component: () => import('../views/admin/Rooms.vue') },
       { path: 'rooms/:roomId/layout', component: () => import('../views/admin/LayoutEditor.vue') },
       { path: 'rooms/:roomId/board', component: () => import('../views/admin/Board.vue') },

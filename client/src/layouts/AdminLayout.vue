@@ -6,6 +6,7 @@
       </div>
       <el-menu :default-active="active" router background-color="#1a2233" text-color="#c7cfe2"
                active-text-color="#fff">
+        <el-menu-item index="/admin/dashboard"><el-icon><Odometer /></el-icon><span>概览首页</span></el-menu-item>
         <el-menu-item index="/admin/rooms"><el-icon><OfficeBuilding /></el-icon><span>自习室与座位</span></el-menu-item>
         <el-menu-item index="/admin/students"><el-icon><User /></el-icon><span>学生预约追踪</span></el-menu-item>
         <el-menu-item index="/admin/reports"><el-icon><DataAnalysis /></el-icon><span>数据报表</span></el-menu-item>
