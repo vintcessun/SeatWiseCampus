@@ -12,6 +12,16 @@
       </div>
     </div>
 
+    <!-- 公告横幅 -->
+    <el-alert v-for="a in announcements" :key="a.id" :type="a.level === 'WARN' ? 'warning' : 'info'"
+      :closable="false" show-icon style="margin-bottom:10px">
+      <template #title>
+        <span style="font-weight:700">📢 {{ a.title }}</span>
+        <span style="margin-left:10px;color:#8a93a6;font-size:12px">{{ (a.createdTime || '').slice(0,10) }}</span>
+      </template>
+      <div style="font-size:13px">{{ a.content }}</div>
+    </el-alert>
+
     <!-- 概览卡片 -->
     <el-row :gutter="16" style="margin-bottom:16px">
       <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#eef4ff">📅</div><div><div class="ov-v">{{ stat.today }}</div><div class="ov-k">今日预约</div></div></div></el-card></el-col>
@@ -59,13 +69,14 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useUserStore } from '../../stores/user'
-import { reservationApi, scoreApi } from '../../api'
+import { reservationApi, scoreApi, announcementApi } from '../../api'
 
 const user = useUserStore()
 const stat = reactive({ today: 0, inUse: 0, completed: 0 })
 const upcoming = ref([])
 const topRank = ref([])
 const myRank = ref(null)
+const announcements = ref([])
 
 function trophy(r) { return r === 1 ? '🥇' : r === 2 ? '🥈' : r === 3 ? '🥉' : '' }
 
@@ -81,6 +92,7 @@ onMounted(async () => {
   topRank.value = rank.slice(0, 5)
   const mine = rank.find(r => r.userId === user.userInfo?.id)
   myRank.value = mine ? mine.rank : null
+  announcements.value = (await announcementApi.list().catch(() => [])).slice(0, 3)
 })
 </script>
 

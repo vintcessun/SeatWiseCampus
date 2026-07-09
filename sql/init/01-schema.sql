@@ -163,3 +163,16 @@ CREATE TABLE score_record (
     created_time DATETIME,
     KEY idx_user (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DROP TABLE IF EXISTS announcement;
+CREATE TABLE announcement (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    title VARCHAR(128) NOT NULL,
+    content VARCHAR(1024) NOT NULL,
+    level VARCHAR(8) NOT NULL DEFAULT 'INFO',   -- INFO / WARN
+    active TINYINT NOT NULL DEFAULT 1,
+    publisher_id BIGINT,
+    created_time DATETIME,
+    updated_time DATETIME,
+    KEY idx_active (active, created_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

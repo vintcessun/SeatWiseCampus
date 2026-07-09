@@ -24,3 +24,7 @@ INSERT INTO study_room (id, building_id, floor_no, name, open_start, open_end, s
 (1, 1, 3, 'A301 静音自习室', '08:00:00', '22:00:00', 'OPEN', 20,  30,  NOW(), NOW()),
 (2, 1, 3, 'A302 讨论自习室', '08:00:00', '22:00:00', 'OPEN', 25,  35,  NOW(), NOW()),
 (3, 2, 2, 'C201 考研自习室', '08:00:00', '22:00:00', 'OPEN', 160, 90,  NOW(), NOW());
+
+INSERT INTO announcement (title, content, level, active, publisher_id, created_time, updated_time) VALUES
+('期末考试季·延长开放时间', '即日起至考试周结束，全部自习室开放时间延长至 23:00，请合理安排、按时签到。', 'INFO', 1, 1, NOW(), NOW()),
+('本周五下午闭馆维护', '本周五 14:00-18:00 图书馆A座进行电路维护，A301/A302 暂停开放，已预约将自动释放，敬请谅解。', 'WARN', 1, 1, NOW(), NOW());

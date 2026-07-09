@@ -75,6 +75,14 @@ export const waitlistApi = {
   cancel: (id) => http.post(`/waitlist/${id}/cancel`)
 }
 
+export const announcementApi = {
+  list: () => http.get('/announcements'),
+  adminList: () => http.get('/admin/announcements'),
+  create: (data) => http.post('/admin/announcements', data),
+  update: (id, data) => http.put(`/admin/announcements/${id}`, data),
+  remove: (id) => http.delete(`/admin/announcements/${id}`)
+}
+
 export const blacklistApi = {
   me: () => http.get('/blacklist/me'),
   list: () => http.get('/admin/blacklist'),
