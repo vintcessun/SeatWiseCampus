@@ -21,6 +21,10 @@
         <el-time-select v-model="end" start="08:30" end="22:00" step="00:30" placeholder="结束" style="width:130px" @change="reload" />
         <el-button :icon="Refresh" @click="reload">刷新座位</el-button>
         <span style="color:#8a93a6;font-size:13px">点击绿色空闲座位进行预约</span>
+        <el-button v-if="freeCount === 0" type="warning" plain :icon="Bell" @click="joinWaitlist">
+          全部占满，加入候补队列
+        </el-button>
+        <el-tag v-else type="success" effect="plain" size="small">当前 {{ freeCount }} 个空位</el-tag>
       </div>
     </el-card>
 
@@ -61,10 +65,10 @@
 <script setup>
 import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Refresh } from '@element-plus/icons-vue'
+import { Refresh, Bell } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import SeatGrid from '../../components/SeatGrid.vue'
-import { boardApi, reservationApi, holdApi, nearbyApi } from '../../api'
+import { boardApi, reservationApi, holdApi, nearbyApi, waitlistApi } from '../../api'
 import { connectBoardStream } from '../../api/boardStream'
 import { todayLocal } from '../../utils/date'
 import { useUserStore } from '../../stores/user'
@@ -92,6 +96,17 @@ let ticker = null
 
 const myId = computed(() => user.userInfo?.id)
 const dialogRemain = computed(() => Math.max(0, Math.ceil((pickedExpireAt.value - nowMs.value) / 1000)))
+const freeCount = computed(() => (board.seats || []).filter(s => s.status === 'FREE').length)
+
+async function joinWaitlist() {
+  if (start.value >= end.value) { ElMessage.warning('开始时间必须早于结束时间'); return }
+  try {
+    await waitlistApi.join({ roomId: Number(roomId), date: date.value, startTime: start.value, endTime: end.value })
+    ElMessage.success('已加入候补队列！有人释放座位时会第一时间通知你')
+  } catch (e) {
+    ElMessage.warning(e?.message || '加入候补失败')
+  }
+}
 
 onMounted(() => {
   reload(); openStream()

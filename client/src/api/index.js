@@ -66,6 +66,13 @@ export const notificationApi = {
   readAll: () => http.post('/notifications/read-all')
 }
 
+export const waitlistApi = {
+  join: (data) => http.post('/waitlist', data),
+  mine: () => http.get('/waitlist/me'),
+  accept: (id) => http.post(`/waitlist/${id}/accept`),
+  cancel: (id) => http.post(`/waitlist/${id}/cancel`)
+}
+
 export const blacklistApi = {
   me: () => http.get('/blacklist/me'),
   list: () => http.get('/admin/blacklist'),

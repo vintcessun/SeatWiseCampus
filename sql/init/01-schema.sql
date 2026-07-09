@@ -128,6 +128,21 @@ CREATE TABLE blacklist_record (
     KEY idx_user_active (user_id, active)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE waitlist (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    room_id BIGINT NOT NULL,
+    date DATE NOT NULL,
+    start_slot INT NOT NULL,
+    end_slot INT NOT NULL,
+    status VARCHAR(16) NOT NULL DEFAULT 'WAITING',
+    offered_seat_id BIGINT,
+    offer_expire_at DATETIME,
+    created_time DATETIME,
+    updated_time DATETIME,
+    KEY idx_room_date_status (room_id, date, status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE notification (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id BIGINT NOT NULL,

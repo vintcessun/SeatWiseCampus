@@ -9,6 +9,7 @@
         <el-menu-item index="/student/home"><el-icon><HomeFilled /></el-icon><span>首页概览</span></el-menu-item>
         <el-menu-item index="/student/rooms"><el-icon><Search /></el-icon><span>选座预约</span></el-menu-item>
         <el-menu-item index="/student/reservations"><el-icon><Tickets /></el-icon><span>我的预约</span></el-menu-item>
+        <el-menu-item index="/student/waitlist"><el-icon><BellFilled /></el-icon><span>我的候补</span></el-menu-item>
         <el-menu-item index="/student/nearby"><el-icon><LocationInformation /></el-icon><span>附近空位</span></el-menu-item>
         <el-menu-item index="/student/ranking"><el-icon><Trophy /></el-icon><span>积分排行</span></el-menu-item>
       </el-menu>

@@ -15,7 +15,7 @@ flowchart LR
     N[① 通知中心+每用户SSE] --> E[② 管理端实时事件流]
     E --> C[③ 冲突后智能替代方案]
     C --> D[④ 首页数据概览Dashboard]
-    D --> W[⑤ 候补队列] --> G[⑥ 组队相邻预约] --> H[⑦ 历史回放]
+    D --> W[⑤ 候补队列 ✅] --> G[⑥ 组队相邻预约] --> H[⑦ 历史回放]
 ```
 
 ## ① 站内通知中心 + 每用户 SSE（✅ 已实现 2026-07-09）
@@ -34,8 +34,11 @@ flowchart LR
 ## ④ 首页数据概览 Dashboard（✅ 学生端+管理端已实现 2026-07-09）
 - 学生端/管理端登录后概览卡片（今日预约、空位率、积分、排名），ECharts 迷你图，观感更完整。
 
-## ⑤ 候补队列（后续，大）
-- 无空位时加入候补，座位释放按公平策略保留 30 秒给队首，串联超时释放/取消/推送/推荐/临时锁，形成完整业务闭环。
+## ⑤ 候补队列（✅ 已实现 2026-07-09）
+- 无空位时一键加入候补（选座页「全部占满，加入候补队列」）；座位释放（取消 / 超时 / 签退 / 自动完成）时按 FIFO 匹配队首、复用 `hold:` Redis TTL 保留 60 秒给该候补者，`seat_hold` SSE 广播 + 站内通知（type=`WAITLIST`）。
+- 候补者在「我的候补」页倒计时内「立即确认预约」→ 复用 `ReservationService.create`（唯一索引兜底）落库为正式预约；超时未确认由 `ScheduledJobs` 的 `expireOffers()` 释放并顺延下一位。
+- 串联超时释放 / 取消 / 推送 / 临时锁，形成完整业务闭环。
+- 落地：表 `waitlist`；`Waitlist`/`WaitlistMapper`/`WaitlistService`/`WaitlistController`；`ReservationService` 四个释放点回调 `onSeatReleased`；前端 `waitlistApi` + `views/student/Waitlist.vue` + 菜单/路由。测试 `scripts/test-waitlist.mjs` 11/11。
 
 ## ⑥ 组队相邻预约（后续，大）
 - 讨论室多人相邻座位，必须全部成功否则整体回滚——展示分布式并发原子性。

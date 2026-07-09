@@ -2,6 +2,7 @@ package com.seatwise.job;
 
 import com.seatwise.entity.Reservation;
 import com.seatwise.service.ReservationService;
+import com.seatwise.service.WaitlistService;
 import com.seatwise.sse.SseManager;
 import com.seatwise.sse.UserSseManager;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ import java.util.List;
 public class ScheduledJobs {
 
     private final ReservationService reservationService;
+    private final WaitlistService waitlistService;
     private final SseManager sse;
     private final UserSseManager userSse;
 
@@ -46,6 +48,7 @@ public class ScheduledJobs {
                     log.info("自动完成预约 {}", r.getId());
                 }
             }
+            waitlistService.expireOffers();
         } catch (Exception e) {
             log.error("定时释放任务异常", e);
         }

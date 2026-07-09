@@ -39,6 +39,7 @@ public class ReservationService {
     private final SseManager sse;
     private final ScoreService scoreService;
     private final NotificationService notificationService;
+    private final WaitlistService waitlistService;
     private final SeatwiseProps props;
     private final TransactionTemplate tx;
 
@@ -175,6 +176,7 @@ public class ReservationService {
         notificationService.notify(userId, "SCORE", "积分 +2",
                 "按时签退并完成本次预约（" + seatLabel(r) + "）");
         broadcastSeat(r.getRoomId(), r.getDate(), r.getSeatId(), "FREE", "seat_released");
+        waitlistService.onSeatReleased(r.getRoomId(), r.getDate(), r.getSeatId(), r.getStartSlot(), r.getEndSlot());
         ReservationVO vo = toVO(r);
         vo.setScoreDelta(2);
         return vo;
@@ -197,6 +199,7 @@ public class ReservationService {
                     "预约开始前 30 分钟内取消（" + seatLabel(r) + "）");
         }
         broadcastSeat(r.getRoomId(), r.getDate(), r.getSeatId(), "FREE", "seat_released");
+        waitlistService.onSeatReleased(r.getRoomId(), r.getDate(), r.getSeatId(), r.getStartSlot(), r.getEndSlot());
         ReservationVO vo = toVO(r);
         vo.setScoreDelta(late ? -1 : 0);
         return vo;
@@ -228,6 +231,7 @@ public class ReservationService {
                             + " 天内暂不能预约，可继续登录与查看记录");
         }
         broadcastSeat(r.getRoomId(), r.getDate(), r.getSeatId(), "FREE", "seat_released");
+        waitlistService.onSeatReleased(r.getRoomId(), r.getDate(), r.getSeatId(), r.getStartSlot(), r.getEndSlot());
     }
 
     // ===================== 自动完成（定时任务调用） =====================
