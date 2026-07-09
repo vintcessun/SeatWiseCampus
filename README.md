@@ -104,9 +104,13 @@ docker compose up -d --build
 node scripts/smoke-test.mjs     # 核心预约闭环 14 项
 node scripts/test-hold.mjs      # 临时锁座 8 项
 node scripts/test-notify.mjs    # 站内通知 7 项
+node scripts/test-fixes.mjs     # 布局生成/黑名单/时间校验等修复 14 项
+node scripts/test-extras.mjs    # 积分明细/AI/附近/替代/报表/追踪/黑名单 11 项
 node scripts/test-waitlist.mjs  # 候补队列闭环 11 项（需干净库）
 node scripts/test-group.mjs     # 组队原子性 7 项（含并发，需干净库）
 node scripts/test-replay.mjs    # 历史回放 7 项
+
+# 全部 8 个套件在干净库上各自认证：合计 79 项，0 失败
 ```
 
 > 部分脚本会写入数据，建议在干净库上单独运行；重置：`docker compose down -v && docker compose up -d`。
