@@ -53,3 +53,6 @@ body {
 .stat-card { text-align: center; padding: 6px 0; }
 .stat-card .num { font-size: 26px; font-weight: 800; }
 .stat-card .lbl { font-size: 12px; color: #8a93a6; }
+
+.alt { border: 1px solid #e6e9f2; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; cursor: pointer; transition: all .12s; }
+.alt:hover { border-color: #3b6cff; box-shadow: 0 2px 10px rgba(59,108,255,.12); }

@@ -40,23 +40,41 @@
         <el-button type="primary" :loading="submitting" :disabled="dialogRemain<=0" @click="submit">确认预约</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="altDialog" title="🤖 座位刚被抢走，为你找到替代方案" width="420px">
+      <p style="color:#8a93a6;margin:0 0 12px">同时段可用座位，点击一键改约：</p>
+      <div v-for="a in alts" :key="a.roomId + '-' + a.seatId" class="alt" @click="chooseAlt(a)">
+        <div>
+          <b>{{ a.roomName }} · {{ a.seatNo }}</b>
+          <el-tag size="small" :type="a.sameRoom ? 'success' : 'info'" effect="plain" style="margin-left:8px">
+            {{ a.sameRoom ? '同房间相邻' : '同校区其它' }}
+          </el-tag>
+        </div>
+        <div style="font-size:12px;color:#8a93a6;margin-top:2px">{{ a.reason }}</div>
+        <div style="font-size:12px;color:#3b6cff;margin-top:4px">{{ a.sameRoom ? '一键改约 →' : '前往该自习室 →' }}</div>
+      </div>
+      <el-empty v-if="!alts.length" description="附近暂无替代空位" :image-size="60" />
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { Refresh } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import SeatGrid from '../../components/SeatGrid.vue'
-import { boardApi, reservationApi, holdApi } from '../../api'
+import { boardApi, reservationApi, holdApi, nearbyApi } from '../../api'
 import { connectBoardStream } from '../../api/boardStream'
 import { todayLocal } from '../../utils/date'
 import { useUserStore } from '../../stores/user'
 
 const route = useRoute()
+const router = useRouter()
 const user = useUserStore()
 const roomId = route.params.roomId
+const altDialog = ref(false)
+const alts = ref([])
 const date = ref(todayLocal())
 const start = ref('14:00')
 const end = ref('16:00')
@@ -122,21 +140,41 @@ async function onSelect(cell) {
   }
 }
 
-async function submit() {
+async function submit() { await reserveSeat(picked.value.seatId) }
+
+async function reserveSeat(seatId) {
   submitting.value = true
   try {
     await reservationApi.create({
-      roomId: Number(roomId), seatId: picked.value.seatId,
+      roomId: Number(roomId), seatId,
       date: date.value, startTime: start.value, endTime: end.value
     })
     ElMessage.success('预约成功！座位已锁定，请按时签到')
     confirmed.value = true
     dialog.value = false
+    altDialog.value = false
     await reload()
   } catch (e) {
     await reload()
+    // 抢座失败 → 智能替代方案
+    if (e?.code === 'SEAT_ALREADY_RESERVED') {
+      const list = await nearbyApi.alternatives({ roomId: Number(roomId), date: date.value, start: start.value, end: end.value, excludeSeatId: seatId }).catch(() => [])
+      if (list && list.length) { alts.value = list; dialog.value = false; altDialog.value = true }
+    }
   } finally {
     submitting.value = false
+  }
+}
+
+async function chooseAlt(a) {
+  if (a.sameRoom) {
+    picked.value = { seatId: a.seatId, seatNo: a.seatNo }
+    confirmed.value = false
+    await reserveSeat(a.seatId)
+  } else {
+    altDialog.value = false
+    releaseCurrent()
+    router.push(`/student/rooms/${a.roomId}/seats`)
   }
 }
 

@@ -70,6 +70,51 @@ public class NearbyService {
         return list;
     }
 
+    /** 抢座失败时的智能替代方案：优先同房间相邻空位，再同校区其它房间 */
+    public List<Map<String, Object>> alternatives(Long roomId, LocalDate date, LocalTime start, LocalTime end, Long excludeSeatId) {
+        int slotMin = props.getSlotMinutes();
+        int startSlot = SlotUtil.toSlot(start, slotMin);
+        int endSlot = SlotUtil.toSlot(end, slotMin);
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        // 1) 同房间其它空位
+        var sameBoard = boardService.buildBoard(roomId, date, startSlot, endSlot, null);
+        String sameRoomName = sameBoard.getRoomName();
+        for (var s : sameBoard.getSeats()) {
+            if ("FREE".equals(s.getStatus()) && !s.getSeatId().equals(excludeSeatId)) {
+                result.add(alt(roomId, sameRoomName, s.getSeatId(), s.getSeatNo(), true, "同房间相邻空位"));
+                if (result.size() >= 2) break;
+            }
+        }
+        // 2) 同校区其它房间各取 1 个，直到 3 个
+        Building b = buildingMapper.selectById(sameBoardBuildingId(roomId));
+        Long campusId = b != null ? b.getCampusId() : 1L;
+        for (StudyRoom room : baseDataService.listRooms(campusId, null, null)) {
+            if (room.getId().equals(roomId)) continue;
+            if (room.getStatus() != null && !"OPEN".equalsIgnoreCase(room.getStatus())) continue;
+            var bd = boardService.buildBoard(room.getId(), date, startSlot, endSlot, null);
+            var free = bd.getSeats().stream().filter(x -> "FREE".equals(x.getStatus())).findFirst().orElse(null);
+            if (free != null) {
+                result.add(alt(room.getId(), room.getName(), free.getSeatId(), free.getSeatNo(), false, "同校区其它自习室"));
+                if (result.size() >= 3) break;
+            }
+        }
+        return result;
+    }
+
+    private Long sameBoardBuildingId(Long roomId) {
+        for (StudyRoom r : baseDataService.listRooms(null, null, null)) if (r.getId().equals(roomId)) return r.getBuildingId();
+        return null;
+    }
+
+    private Map<String, Object> alt(Long roomId, String roomName, Long seatId, String seatNo, boolean sameRoom, String reason) {
+        Map<String, Object> m = new HashMap<>();
+        m.put("roomId", roomId); m.put("roomName", roomName);
+        m.put("seatId", seatId); m.put("seatNo", seatNo);
+        m.put("sameRoom", sameRoom); m.put("reason", reason);
+        return m;
+    }
+
     private double distance(Building a, Building b) {
         if (a == null || b == null) return Double.MAX_VALUE;
         Integer ax = a.getMapX(), ay = a.getMapY(), bx = b.getMapX(), by = b.getMapY();

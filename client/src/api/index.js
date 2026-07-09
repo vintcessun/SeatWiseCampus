@@ -51,7 +51,8 @@ export const scoreApi = {
 }
 
 export const nearbyApi = {
-  nearest: (params) => http.get('/rooms/nearest-available', { params })
+  nearest: (params) => http.get('/rooms/nearest-available', { params }),
+  alternatives: (params) => http.get('/rooms/alternatives', { params })
 }
 
 export const aiApi = {

@@ -25,10 +25,10 @@ flowchart LR
 - **触发点**：签退(+2)/临近取消(-1)/超时未签到(-3)/进入黑名单，均写明原因。
 - **接口**：`GET /api/notifications`、`GET /api/notifications/unread-count`、`POST /api/notifications/{id}/read`、`POST /api/notifications/read-all`、`GET /api/notifications/stream`。
 
-## ② 管理端实时事件流（后续）
+## ② 管理端实时事件流（✅ 已实现 2026-07-09）
 - 右侧滚动事件列表：`15:42 A-05 完成签到 / 临时锁定 / 超时释放`，点击定位座位。复用现有 SSE `seat_*` 事件聚合成全局事件流。
 
-## ③ 冲突后智能替代方案（后续）
+## ③ 冲突后智能替代方案（✅ 已实现 2026-07-09）
 - 预约提交遇 `SEAT_ALREADY_RESERVED` 时，复用 AI 推荐引擎即时给出「相邻/同房间/同楼层」替代座位，一键切换重提，提升"智能感"。
 
 ## ④ 首页数据概览 Dashboard（后续）
