@@ -52,6 +52,10 @@ export const scoreApi = {
   ranking: (period) => http.get('/scores/ranking', { params: { period } })
 }
 
+export const meApi = {
+  studyReport: () => http.get('/me/study-report')
+}
+
 export const nearbyApi = {
   nearest: (params) => http.get('/rooms/nearest-available', { params }),
   alternatives: (params) => http.get('/rooms/alternatives', { params })

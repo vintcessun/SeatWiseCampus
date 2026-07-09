@@ -15,6 +15,7 @@ const routes = [
       { path: 'rooms/:roomId/seats', component: () => import('../views/student/Seats.vue') },
       { path: 'reservations', component: () => import('../views/student/Reservations.vue') },
       { path: 'waitlist', component: () => import('../views/student/Waitlist.vue') },
+      { path: 'report', component: () => import('../views/student/StudyReport.vue') },
       { path: 'ranking', component: () => import('../views/student/Ranking.vue') },
       { path: 'nearby', component: () => import('../views/student/Nearby.vue') }
     ]

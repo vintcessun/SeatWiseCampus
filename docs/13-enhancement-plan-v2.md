@@ -32,8 +32,10 @@ flowchart LR
 - **配置**：`seatwise.remind-before-minutes`（默认 10）。
 - **验收**：`scripts/test-reminder.mjs` —— 构造一个「签到窗口已开放」的预约，跑一次提醒逻辑后该用户收到 REMINDER 通知，且重复跑不重复推送。
 
-## ⑩ 个人自习报告（Study Report）
+## ⑩ 个人自习报告（Study Report）✅ 已实现 2026-07-09
 - **价值**：学生「个人中心」深度——累计自习时长、完成场次、守约率、连续天数（streak）、近 7 天时长柱状图。纯聚合既有 `reservation`，无需建表，ECharts 呈现，演示友好。
+- **落地**：`StudyReportService.report` + `MeController` `GET /api/me/study-report`；前端 `views/student/StudyReport.vue`（KPI 卡 + 近7天柱状图 + 守约环图）+ 菜单/路由。
+- **演示数据**：`DataInitializer.seedHistory()` 在无预约时注入最近 7 天「已完成/爽约释放」历史（同时惠及历史回放/排行）。测试 `scripts/test-report-me.mjs` 8/8。
 - **接口**：`GET /api/me/study-report` → `{ totalSessions, completedSessions, totalHours, onTimeRate, streakDays, weekly:[{date,hours}] }`。
 - **口径**：完成 = 状态 COMPLETED；时长 = Σ(endSlot-startSlot)×slotMinutes/60（或签到到签退实际时长，取预约时段口径更稳）；守约率 = COMPLETED / (COMPLETED + EXPIRED_RELEASED)；streak = 最近连续有完成预约的自然天数。
 - **前端**：学生端「自习报告」页（卡片 + 近 7 天柱状图 + 守约率环图）。
