@@ -18,6 +18,9 @@
       <el-header style="background:#fff;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #eef0f5">
         <div style="font-weight:600">管理控制台</div>
         <div style="display:flex;align-items:center;gap:14px">
+          <el-tooltip :content="theme === 'dark' ? '切换到明亮模式' : '切换到深色模式'" placement="bottom">
+            <el-button circle :icon="theme === 'dark' ? Sunny : Moon" @click="toggleTheme" />
+          </el-tooltip>
           <span>{{ user.userInfo?.realName }}（管理员）</span>
           <el-button link type="primary" @click="logout">退出</el-button>
         </div>
@@ -36,7 +39,9 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { Sunny, Moon } from '@element-plus/icons-vue'
 import { useUserStore } from '../stores/user'
+import { theme, toggleTheme } from '../utils/theme'
 
 const route = useRoute()
 const router = useRouter()

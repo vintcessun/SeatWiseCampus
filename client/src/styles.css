@@ -30,6 +30,32 @@ body {
 /* 数字滚动/强调 */
 .count-pop { font-variant-numeric: tabular-nums; }
 
+/* ============ 深色模式 ============ */
+html.dark body {
+  color: #e6e9f2;
+  background:
+    radial-gradient(1100px 520px at 8% -8%, rgba(91,140,255,.16), transparent 60%),
+    radial-gradient(1000px 540px at 100% 0%, rgba(143,91,255,.16), transparent 55%),
+    #0e1220;
+}
+html.dark .page-sub { color: #8b93a7; }
+html.dark .el-header { background: #141a29 !important; border-bottom-color: #232a3d !important; color: #e6e9f2 !important; }
+html.dark .el-main { background: transparent !important; }
+html.dark .el-main .el-card:hover { box-shadow: 0 10px 28px rgba(0,0,0,.4); }
+/* 概览/报告卡片内的深色文字改亮 */
+html.dark .ov-v, html.dark .kpi .v, html.dark .stat-card .num, html.dark .card-title { color: #eef1f8; }
+html.dark .num, html.dark .mini .num { filter: brightness(1.15); }
+/* 座位在深色下更柔和 */
+html.dark .seat-FREE { background: #16362a; color: #4fd18a; border-color: #1f5a41; }
+html.dark .seat-RESERVED { background: #3a2f18; color: #ffc65c; border-color: #6a5220; }
+html.dark .seat-USING { background: #3d1f24; color: #ff8a8a; border-color: #6e2f38; }
+html.dark .seat-DISABLED { background: #232a3a; color: #6b7488; border-color: #313a4f; }
+html.dark .seat-HELD { background: #3a3316; color: #ffd873; border-color: #6a5b1f; }
+html.dark .alt { border-color: #2a3550; }
+html.dark .login-panel { background: radial-gradient(600px 300px at 50% -10%, rgba(91,140,255,.14), transparent 60%), #0e1220; }
+/* 平滑切换 */
+body, .el-card, .el-header { transition: background-color .35s ease, color .25s ease, border-color .35s ease; }
+
 .page { padding: 20px; }
 .page-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
 .page-sub { color: #8a93a6; font-size: 13px; margin-bottom: 18px; }
