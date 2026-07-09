@@ -7,7 +7,7 @@
         <div class="hero-sub">欢迎来到 SeatWise · 今天也要高效自习哦</div>
       </div>
       <div class="hero-stats">
-        <div class="hero-stat"><div class="v">{{ user.userInfo?.creditScore ?? 0 }}</div><div class="k">信用积分</div></div>
+        <div class="hero-stat"><div class="v"><CountUp :value="user.userInfo?.creditScore ?? 0" /></div><div class="k">信用积分</div></div>
         <div class="hero-stat"><div class="v">{{ myRank || '-' }}</div><div class="k">积分排名</div></div>
       </div>
     </div>
@@ -24,10 +24,10 @@
 
     <!-- 概览卡片 -->
     <el-row :gutter="16" style="margin-bottom:16px">
-      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#eef4ff">📅</div><div><div class="ov-v">{{ stat.today }}</div><div class="ov-k">今日预约</div></div></div></el-card></el-col>
-      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#ffefef">🪑</div><div><div class="ov-v">{{ stat.inUse }}</div><div class="ov-k">进行中</div></div></div></el-card></el-col>
-      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#eafaf0">✅</div><div><div class="ov-v">{{ stat.completed }}</div><div class="ov-k">累计完成</div></div></div></el-card></el-col>
-      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#fff6e0">⚠️</div><div><div class="ov-v">{{ user.userInfo?.noShowCount ?? 0 }}</div><div class="ov-k">爽约次数</div></div></div></el-card></el-col>
+      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#eef4ff">📅</div><div><div class="ov-v"><CountUp :value="stat.today" /></div><div class="ov-k">今日预约</div></div></div></el-card></el-col>
+      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#ffefef">🪑</div><div><div class="ov-v"><CountUp :value="stat.inUse" /></div><div class="ov-k">进行中</div></div></div></el-card></el-col>
+      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#eafaf0">✅</div><div><div class="ov-v"><CountUp :value="stat.completed" /></div><div class="ov-k">累计完成</div></div></div></el-card></el-col>
+      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#fff6e0">⚠️</div><div><div class="ov-v"><CountUp :value="user.userInfo?.noShowCount ?? 0" /></div><div class="ov-k">爽约次数</div></div></div></el-card></el-col>
     </el-row>
 
     <el-row :gutter="16">
@@ -70,6 +70,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useUserStore } from '../../stores/user'
 import { reservationApi, scoreApi, announcementApi } from '../../api'
+import CountUp from '../../components/CountUp.vue'
 
 const user = useUserStore()
 const stat = reactive({ today: 0, inUse: 0, completed: 0 })

@@ -22,8 +22,12 @@
           <el-button link type="primary" @click="logout">退出</el-button>
         </div>
       </el-header>
-      <el-main style="background:var(--sw-bg)">
-        <router-view />
+      <el-main style="background:transparent">
+        <router-view v-slot="{ Component }">
+          <transition name="fade-slide" mode="out-in">
+            <component :is="Component" />
+          </transition>
+        </router-view>
       </el-main>
     </el-container>
   </el-container>

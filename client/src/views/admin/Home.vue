@@ -9,10 +9,10 @@
     </div>
 
     <el-row :gutter="16" style="margin-bottom:16px">
-      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#eef4ff">🏫</div><div><div class="ov-v">{{ rooms.length }}</div><div class="ov-k">自习室数</div></div></div></el-card></el-col>
-      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#eafaf0">📅</div><div><div class="ov-v">{{ data.total || 0 }}</div><div class="ov-k">总预约数</div></div></div></el-card></el-col>
-      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#e9f0ff">↩️</div><div><div class="ov-v" style="color:#3b6cff">{{ data.cancelRate || 0 }}%</div><div class="ov-k">取消率</div></div></div></el-card></el-col>
-      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#ffefef">⚠️</div><div><div class="ov-v" style="color:#d64545">{{ data.noShowRate || 0 }}%</div><div class="ov-k">爽约率</div></div></div></el-card></el-col>
+      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#eef4ff">🏫</div><div><div class="ov-v"><CountUp :value="rooms.length" /></div><div class="ov-k">自习室数</div></div></div></el-card></el-col>
+      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#eafaf0">📅</div><div><div class="ov-v"><CountUp :value="data.total || 0" /></div><div class="ov-k">总预约数</div></div></div></el-card></el-col>
+      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#e9f0ff">↩️</div><div><div class="ov-v" style="color:#3b6cff"><CountUp :value="data.cancelRate || 0" />%</div><div class="ov-k">取消率</div></div></div></el-card></el-col>
+      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#ffefef">⚠️</div><div><div class="ov-v" style="color:#d64545"><CountUp :value="data.noShowRate || 0" />%</div><div class="ov-k">爽约率</div></div></div></el-card></el-col>
     </el-row>
 
     <el-row :gutter="16">
@@ -49,6 +49,7 @@ import { ref, reactive, onMounted, nextTick } from 'vue'
 import * as echarts from 'echarts'
 import { reportApi, baseApi, boardApi } from '../../api'
 import { todayLocal } from '../../utils/date'
+import CountUp from '../../components/CountUp.vue'
 
 const data = reactive({})
 const rooms = ref([])

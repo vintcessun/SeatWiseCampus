@@ -7,9 +7,28 @@
 html, body, #app { height: 100%; margin: 0; }
 body {
   font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
-  background: var(--sw-bg);
+  background:
+    radial-gradient(1100px 500px at 8% -8%, rgba(91,140,255,.10), transparent 60%),
+    radial-gradient(1000px 520px at 100% 0%, rgba(143,91,255,.10), transparent 55%),
+    var(--sw-bg);
   color: #1f2430;
 }
+
+/* 卡片微交互：轻悬浮 + 柔和阴影 */
+.el-card { border-radius: 14px !important; transition: transform .18s ease, box-shadow .18s ease; }
+.el-main .el-card:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(31,45,80,.08); }
+
+/* 路由切换过渡 */
+.fade-slide-enter-active { transition: opacity .28s ease, transform .28s ease; }
+.fade-slide-leave-active { transition: opacity .16s ease; }
+.fade-slide-enter-from { opacity: 0; transform: translateY(10px); }
+.fade-slide-leave-to { opacity: 0; }
+
+/* 玻璃拟态工具类 */
+.glass { background: rgba(255,255,255,.14); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,.22); }
+
+/* 数字滚动/强调 */
+.count-pop { font-variant-numeric: tabular-nums; }
 
 .page { padding: 20px; }
 .page-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
@@ -34,7 +53,10 @@ body {
   transition: transform .08s;
 }
 .seat-cell.clickable { cursor: pointer; }
-.seat-cell.clickable:hover { transform: translateY(-2px); }
+.seat-cell.clickable:hover { transform: translateY(-3px) scale(1.06); box-shadow: 0 6px 14px rgba(31,45,80,.14); }
+.seat-cell { transition: transform .12s ease, box-shadow .12s ease, background .2s ease; }
+@keyframes seatpop { 0% { transform: scale(.6); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
+.seat-pop { animation: seatpop .35s ease; }
 .seat-FREE { background: #e3f6e9; color: #1f9d55; border: 1px solid #b7e6c6; }
 .seat-RESERVED { background: #fff2dd; color: #d98a00; border: 1px solid #ffd699; }
 .seat-USING { background: #ffe1e1; color: #d64545; border: 1px solid #ffb3b3; }

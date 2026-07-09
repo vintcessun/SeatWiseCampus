@@ -45,6 +45,7 @@ import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { reservationApi } from '../../api'
 import { useUserStore } from '../../stores/user'
+import { burstConfetti } from '../../utils/confetti'
 
 const list = ref([])
 const user = useUserStore()
@@ -77,6 +78,7 @@ async function act(type, row) {
       await ElMessageBox.confirm('确认取消该预约？临近开始时间取消可能扣分', '提示', { type: 'warning' })
     }
     const data = await reservationApi[type](row.id)
+    if (type === 'checkIn') burstConfetti({ count: 110 })
     if (data && data.scoreDelta) {
       ElMessage.success(`操作成功，积分 ${data.scoreDelta > 0 ? '+' : ''}${data.scoreDelta}`)
     } else {

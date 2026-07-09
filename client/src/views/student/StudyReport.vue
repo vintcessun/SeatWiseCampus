@@ -4,10 +4,10 @@
     <div class="page-sub">基于你的预约与签到记录自动统计，量化你的自习习惯</div>
 
     <el-row :gutter="16" style="margin-bottom:16px">
-      <el-col :span="6"><el-card shadow="never"><div class="kpi"><div class="v">{{ data.completedSessions }}</div><div class="k">累计完成场次</div></div></el-card></el-col>
-      <el-col :span="6"><el-card shadow="never"><div class="kpi"><div class="v">{{ data.totalHours }}<small> h</small></div><div class="k">累计自习时长</div></div></el-card></el-col>
-      <el-col :span="6"><el-card shadow="never"><div class="kpi"><div class="v">{{ data.streakDays }}<small> 天</small></div><div class="k">连续自习天数 🔥</div></div></el-card></el-col>
-      <el-col :span="6"><el-card shadow="never"><div class="kpi"><div class="v" :style="{color: rateColor}">{{ data.onTimeRate }}%</div><div class="k">守约率</div></div></el-card></el-col>
+      <el-col :span="6"><el-card shadow="never"><div class="kpi"><div class="v"><CountUp :value="data.completedSessions" /></div><div class="k">累计完成场次</div></div></el-card></el-col>
+      <el-col :span="6"><el-card shadow="never"><div class="kpi"><div class="v"><CountUp :value="data.totalHours" :decimals="1" /><small> h</small></div><div class="k">累计自习时长</div></div></el-card></el-col>
+      <el-col :span="6"><el-card shadow="never"><div class="kpi"><div class="v"><CountUp :value="data.streakDays" /><small> 天</small></div><div class="k">连续自习天数 🔥</div></div></el-card></el-col>
+      <el-col :span="6"><el-card shadow="never"><div class="kpi"><div class="v" :style="{color: rateColor}"><CountUp :value="data.onTimeRate" />%</div><div class="k">守约率</div></div></el-card></el-col>
     </el-row>
 
     <el-row :gutter="16">
@@ -37,6 +37,7 @@
 import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import * as echarts from 'echarts'
 import { meApi } from '../../api'
+import CountUp from '../../components/CountUp.vue'
 
 const data = reactive({ completedSessions: 0, expiredSessions: 0, totalHours: 0, onTimeRate: 100, streakDays: 0, weekly: [] })
 const barEl = ref(null)

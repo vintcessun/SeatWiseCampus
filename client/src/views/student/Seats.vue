@@ -100,6 +100,7 @@ import SeatGrid from '../../components/SeatGrid.vue'
 import { boardApi, reservationApi, holdApi, nearbyApi, waitlistApi } from '../../api'
 import { connectBoardStream } from '../../api/boardStream'
 import { todayLocal } from '../../utils/date'
+import { burstConfetti } from '../../utils/confetti'
 import { useUserStore } from '../../stores/user'
 
 const route = useRoute()
@@ -167,6 +168,7 @@ async function submitGroup() {
       members: groupSeats.value.map(s => ({ seatId: s.seatId, username: s.username.trim() }))
     })
     ElMessage.success(`组队预约成功！已为小组原子锁定 ${res.length} 个相邻座位`)
+    burstConfetti({ count: 180 })
     groupSeats.value = []
     await reload()
   } catch (e) {
@@ -251,6 +253,7 @@ async function reserveSeat(seatId) {
       date: date.value, startTime: start.value, endTime: end.value
     })
     ElMessage.success('预约成功！座位已锁定，请按时签到')
+    burstConfetti()
     confirmed.value = true
     dialog.value = false
     altDialog.value = false

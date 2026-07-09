@@ -40,6 +40,7 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { waitlistApi, baseApi } from '../../api'
+import { burstConfetti } from '../../utils/confetti'
 
 const router = useRouter()
 const list = ref([])
@@ -93,6 +94,7 @@ async function accept(row) {
   try {
     await waitlistApi.accept(row.id)
     ElMessage.success('候补确认成功，座位已锁定，请按时签到')
+    burstConfetti()
     router.push('/student/reservations')
   } catch (e) {
     ElMessage.warning(e?.message || '确认失败，席位可能已释放')
