@@ -11,6 +11,8 @@ public enum BizError {
     DAILY_LIMIT_EXCEEDED(400, "今日预约次数已达上限"),
     USER_IN_BLACKLIST(403, "你已被列入黑名单，暂不能预约"),
     SIGN_IN_TIMEOUT(400, "签到超时"),
+    SIGN_IN_TOO_EARLY(400, "还未到签到时间"),
+    USERNAME_EXISTS(400, "用户名已存在"),
     RESERVATION_NOT_FOUND(404, "预约不存在"),
     INVALID_TIME_RANGE(400, "预约时间不合法"),
     SCORE_RULE_NOT_FOUND(400, "积分规则缺失"),

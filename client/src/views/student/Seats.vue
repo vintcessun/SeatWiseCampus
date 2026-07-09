@@ -88,6 +88,15 @@ function applyStatus(p, status) {
 }
 
 function onSelect(cell) {
+  if (start.value >= end.value) {
+    ElMessage.warning('开始时间必须早于结束时间')
+    return
+  }
+  const startAt = new Date(`${date.value}T${start.value}:00`)
+  if (startAt.getTime() <= Date.now()) {
+    ElMessage.warning('预约开始时间需晚于当前时间')
+    return
+  }
   picked.value = cell
   dialog.value = true
 }

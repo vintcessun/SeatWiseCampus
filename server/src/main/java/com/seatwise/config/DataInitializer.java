@@ -3,11 +3,14 @@ package com.seatwise.config;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.seatwise.entity.Seat;
 import com.seatwise.entity.StudyRoom;
+import com.seatwise.entity.User;
 import com.seatwise.mapper.SeatMapper;
 import com.seatwise.mapper.StudyRoomMapper;
+import com.seatwise.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -23,6 +26,8 @@ public class DataInitializer implements CommandLineRunner {
 
     private final SeatMapper seatMapper;
     private final StudyRoomMapper roomMapper;
+    private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     private static final int ROWS = 6;
     private static final int COLS = 8;
@@ -30,6 +35,7 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        migratePlainPasswords();
         Long count = seatMapper.selectCount(new LambdaQueryWrapper<>());
         if (count != null && count > 0) {
             return;
@@ -39,6 +45,21 @@ public class DataInitializer implements CommandLineRunner {
             generate(room.getId());
         }
         log.info("已为 {} 个自习室生成座位网格", rooms.size());
+    }
+
+    /** 将种子数据里的明文密码升级为 BCrypt（幂等：已是 $2 前缀的跳过） */
+    private void migratePlainPasswords() {
+        List<User> users = userMapper.selectList(new LambdaQueryWrapper<>());
+        int migrated = 0;
+        for (User u : users) {
+            String pwd = u.getPassword();
+            if (pwd != null && !pwd.startsWith("$2")) {
+                u.setPassword(passwordEncoder.encode(pwd));
+                userMapper.updateById(u);
+                migrated++;
+            }
+        }
+        if (migrated > 0) log.info("已将 {} 个用户的明文密码升级为 BCrypt", migrated);
     }
 
     private void generate(Long roomId) {

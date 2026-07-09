@@ -5,10 +5,12 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.seatwise.common.BizError;
 import com.seatwise.common.BizException;
 import com.seatwise.dto.LoginDTO;
+import com.seatwise.dto.RegisterDTO;
 import com.seatwise.entity.User;
 import com.seatwise.mapper.UserMapper;
 import com.seatwise.vo.LoginVO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.BeanUtils;
 
@@ -17,11 +19,12 @@ import org.springframework.beans.BeanUtils;
 public class AuthService {
 
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     public LoginVO login(LoginDTO dto) {
         User user = userMapper.selectOne(new LambdaQueryWrapper<User>()
                 .eq(User::getUsername, dto.getUsername()));
-        if (user == null || !user.getPassword().equals(dto.getPassword())) {
+        if (user == null || !passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
             throw new BizException(BizError.LOGIN_FAILED);
         }
         StpUtil.login(user.getId());
@@ -32,6 +35,27 @@ public class AuthService {
         vo.setRole(user.getRole());
         vo.setUserInfo(toInfo(user));
         return vo;
+    }
+
+    public LoginVO register(RegisterDTO dto) {
+        Long exists = userMapper.selectCount(new LambdaQueryWrapper<User>()
+                .eq(User::getUsername, dto.getUsername()));
+        if (exists != null && exists > 0) {
+            throw new BizException(BizError.USERNAME_EXISTS);
+        }
+        User user = new User();
+        user.setUsername(dto.getUsername());
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setRealName(dto.getRealName());
+        user.setRole("STUDENT");
+        user.setCreditScore(0);
+        user.setNoShowCount(0);
+        userMapper.insert(user);
+
+        LoginDTO login = new LoginDTO();
+        login.setUsername(dto.getUsername());
+        login.setPassword(dto.getPassword());
+        return login(login);
     }
 
     public LoginVO.UserInfo me() {

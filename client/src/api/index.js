@@ -2,6 +2,7 @@ import http from './http'
 
 export const authApi = {
   login: (data) => http.post('/auth/login', data),
+  register: (data) => http.post('/auth/register', data),
   logout: () => http.post('/auth/logout'),
   me: () => http.get('/users/me')
 }
@@ -13,9 +14,14 @@ export const baseApi = {
   layout: (roomId) => http.get(`/study-rooms/${roomId}/layout`),
   saveLayout: (roomId, data) => http.put(`/study-rooms/${roomId}/layout`, data),
   toggleSeat: (seatId, enabled) => http.post(`/seats/${seatId}/toggle`, null, { params: { enabled } }),
+  generateLayout: (roomId, params) => http.post(`/study-rooms/${roomId}/generate-layout`, null, { params }),
   createCampus: (data) => http.post('/campuses', data),
   createBuilding: (data) => http.post('/buildings', data),
   createRoom: (data) => http.post('/study-rooms', data)
+}
+
+export const adminApi = {
+  reservations: (params) => http.get('/admin/reservations', { params })
 }
 
 export const boardApi = {

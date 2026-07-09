@@ -1,7 +1,12 @@
 <template>
   <div class="page">
-    <div class="page-title">自习室与座位</div>
-    <div class="page-sub">维护座位排布（启用/禁用），查看实时座位看板</div>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div class="page-title">自习室与座位</div>
+        <div class="page-sub">新增自习室、维护座位排布（生成/启用/禁用）、查看实时看板</div>
+      </div>
+      <el-button type="primary" :icon="Plus" @click="openCreate">新增自习室</el-button>
+    </div>
 
     <el-card shadow="never">
       <el-table :data="rooms" style="width:100%">
@@ -25,21 +30,68 @@
         </el-table-column>
       </el-table>
     </el-card>
+
+    <el-dialog v-model="dialog" title="新增自习室" width="440px">
+      <el-form label-width="90px">
+        <el-form-item label="所属楼栋">
+          <el-select v-model="form.buildingId" placeholder="选择楼栋" style="width:100%">
+            <el-option v-for="b in buildings" :key="b.id" :label="b.name" :value="b.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="名称"><el-input v-model="form.name" placeholder="如 A303 静音自习室" /></el-form-item>
+        <el-form-item label="楼层"><el-input-number v-model="form.floorNo" :min="1" :max="30" /></el-form-item>
+        <el-form-item label="开放时间">
+          <el-time-select v-model="form.openStart" start="06:00" end="12:00" step="00:30" style="width:120px" />
+          <span style="margin:0 8px">至</span>
+          <el-time-select v-model="form.openEnd" start="12:00" end="23:30" step="00:30" style="width:120px" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialog=false">取消</el-button>
+        <el-button type="primary" :loading="saving" @click="save">创建</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
+import { Plus } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 import { baseApi } from '../../api'
+
 const rooms = ref([])
 const buildings = ref([])
-onMounted(async () => {
+const dialog = ref(false)
+const saving = ref(false)
+const form = reactive({ buildingId: null, name: '', floorNo: 1, openStart: '08:00', openEnd: '22:00' })
+
+onMounted(loadAll)
+async function loadAll() {
   const campuses = await baseApi.campuses()
   let bs = []
   for (const c of campuses) bs = bs.concat(await baseApi.buildings(c.id))
   buildings.value = bs
   rooms.value = await baseApi.rooms({})
-})
+}
 function buildingName(id) { return buildings.value.find(b => b.id === id)?.name || '' }
 function fmt(t) { return t ? String(t).slice(0, 5) : '' }
+
+function openCreate() {
+  if (buildings.value.length) form.buildingId = buildings.value[0].id
+  dialog.value = true
+}
+async function save() {
+  if (!form.buildingId || !form.name) { ElMessage.warning('请填写楼栋与名称'); return }
+  saving.value = true
+  try {
+    await baseApi.createRoom({
+      buildingId: form.buildingId, name: form.name, floorNo: form.floorNo,
+      openStart: form.openStart + ':00', openEnd: form.openEnd + ':00', status: 'OPEN'
+    })
+    ElMessage.success('创建成功，可进入「座位排布」生成座位')
+    dialog.value = false
+    await loadAll()
+  } catch (e) { /* 拦截器提示 */ } finally { saving.value = false }
+}
 </script>

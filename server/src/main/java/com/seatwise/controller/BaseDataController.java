@@ -64,6 +64,16 @@ public class BaseDataController {
     }
 
     @SaCheckRole("ADMIN")
+    @PostMapping("/study-rooms/{id}/generate-layout")
+    public R<Void> generateLayout(@PathVariable Long id,
+                                  @RequestParam int rows,
+                                  @RequestParam int cols,
+                                  @RequestParam(required = false) Integer aisleCol) {
+        baseDataService.generateLayout(id, rows, cols, aisleCol);
+        return R.ok();
+    }
+
+    @SaCheckRole("ADMIN")
     @PostMapping("/campuses")
     public R<Campus> createCampus(@RequestBody Campus c) {
         campusMapper.insert(c);

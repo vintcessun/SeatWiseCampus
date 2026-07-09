@@ -62,10 +62,9 @@ public class ReservationService {
             throw new BizException(BizError.INVALID_TIME_RANGE, "早于开放时间");
         if (room.getOpenEnd() != null && endTime.isAfter(room.getOpenEnd()))
             throw new BizException(BizError.INVALID_TIME_RANGE, "晚于开放时间");
-        LocalDate today = LocalDate.now();
-        if (date.isBefore(today)) throw new BizException(BizError.INVALID_TIME_RANGE, "不能预约过去日期");
-        if (date.isEqual(today) && !endTime.isAfter(LocalTime.now()))
-            throw new BizException(BizError.INVALID_TIME_RANGE, "不能预约已过去的时段");
+        LocalDateTime nowTs = LocalDateTime.now();
+        if (LocalDateTime.of(date, startTime).isBefore(nowTs))
+            throw new BizException(BizError.INVALID_TIME_RANGE, "预约开始时间需晚于当前时间");
 
         // 5. 单次时长 & 单日次数
         if (endSlot - startSlot > props.getMaxSlotsPerReservation())
@@ -142,8 +141,13 @@ public class ReservationService {
         Reservation r = mustOwn(userId, reservationId);
         if (!"PENDING_SIGN_IN".equals(r.getStatus()))
             throw new BizException(BizError.RESERVATION_NOT_FOUND, "当前状态不可签到");
-        LocalDateTime deadline = startDateTime(r).plusMinutes(props.getSigninWindowMinutes());
-        if (LocalDateTime.now().isAfter(deadline))
+        LocalDateTime start = startDateTime(r);
+        LocalDateTime deadline = start.plusMinutes(props.getSigninWindowMinutes());
+        LocalDateTime now = LocalDateTime.now();
+        if (now.isBefore(start))
+            throw new BizException(BizError.SIGN_IN_TOO_EARLY,
+                    "签到将于 " + SlotUtil.label(r.getStartSlot(), props.getSlotMinutes()) + " 开放");
+        if (now.isAfter(deadline))
             throw new BizException(BizError.SIGN_IN_TIMEOUT);
         tx.executeWithoutResult(s -> {
             r.setStatus("IN_USE");
@@ -167,7 +171,9 @@ public class ReservationService {
         });
         scoreService.addScore(userId, 2, "CHECKOUT_OK", r.getId());
         broadcastSeat(r.getRoomId(), r.getDate(), r.getSeatId(), "FREE", "seat_released");
-        return toVO(r);
+        ReservationVO vo = toVO(r);
+        vo.setScoreDelta(2);
+        return vo;
     }
 
     // ===================== 取消 =====================
@@ -183,7 +189,9 @@ public class ReservationService {
         });
         if (late) scoreService.addScore(userId, -1, "CANCEL_LATE", r.getId());
         broadcastSeat(r.getRoomId(), r.getDate(), r.getSeatId(), "FREE", "seat_released");
-        return toVO(r);
+        ReservationVO vo = toVO(r);
+        vo.setScoreDelta(late ? -1 : 0);
+        return vo;
     }
 
     // ===================== 超时释放（定时任务调用） =====================
@@ -295,6 +303,10 @@ public class ReservationService {
         vo.setDate(r.getDate());
         vo.setStartTime(SlotUtil.label(r.getStartSlot(), props.getSlotMinutes()));
         vo.setEndTime(SlotUtil.label(r.getEndSlot(), props.getSlotMinutes()));
+        vo.setSigninStart(vo.getStartTime());
+        LocalTime dl = SlotUtil.slotToTime(r.getStartSlot(), props.getSlotMinutes())
+                .plusMinutes(props.getSigninWindowMinutes());
+        vo.setSigninDeadline(String.format("%02d:%02d", dl.getHour(), dl.getMinute()));
         vo.setStatus(r.getStatus());
         vo.setCheckInTime(r.getCheckInTime() != null ? r.getCheckInTime().toString() : null);
         vo.setCheckOutTime(r.getCheckOutTime() != null ? r.getCheckOutTime().toString() : null);
@@ -307,6 +319,30 @@ public class ReservationService {
             if (b != null) vo.setBuildingName(b.getName());
         }
         return vo;
+    }
+
+    // ===================== 管理端：按学生追踪预约 =====================
+    public List<ReservationVO> adminSearch(String keyword, String status, LocalDate date) {
+        LambdaQueryWrapper<Reservation> w = new LambdaQueryWrapper<Reservation>()
+                .orderByDesc(Reservation::getDate).orderByDesc(Reservation::getStartSlot).last("limit 200");
+        if (status != null && !status.isBlank()) w.eq(Reservation::getStatus, status);
+        if (date != null) w.eq(Reservation::getDate, date);
+        if (keyword != null && !keyword.isBlank()) {
+            List<User> users = userMapper.selectList(new LambdaQueryWrapper<User>()
+                    .like(User::getRealName, keyword).or().like(User::getUsername, keyword));
+            List<Long> ids = users.stream().map(User::getId).toList();
+            if (ids.isEmpty()) return List.of();
+            w.in(Reservation::getUserId, ids);
+        }
+        List<Reservation> list = reservationMapper.selectList(w);
+        List<ReservationVO> vos = new ArrayList<>();
+        for (Reservation r : list) {
+            ReservationVO vo = toVO(r);
+            User u = userMapper.selectById(r.getUserId());
+            if (u != null) { vo.setStudentName(u.getRealName()); vo.setUsername(u.getUsername()); }
+            vos.add(vo);
+        }
+        return vos;
     }
 
     // 供定时任务查询

@@ -1,6 +1,7 @@
 services:
   mysql:
     image: mysql:8.0
+    restart: unless-stopped
     container_name: seatwise-mysql
     environment:
       MYSQL_ROOT_PASSWORD: seatwise123
@@ -20,6 +21,7 @@ services:
 
   redis:
     image: redis:7-alpine
+    restart: unless-stopped
     container_name: seatwise-redis
     ports:
       - "6380:6379"
@@ -31,6 +33,7 @@ services:
 
   backend:
     build: ./server
+    restart: unless-stopped
     container_name: seatwise-backend
     depends_on:
       mysql:
@@ -55,6 +58,7 @@ services:
 
   frontend:
     build: ./client
+    restart: unless-stopped
     container_name: seatwise-frontend
     depends_on:
       - backend

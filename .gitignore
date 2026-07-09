@@ -1,5 +1,9 @@
 .idea/
 
+# 密钥 / 本地环境
+.env
+.env.local
+
 # 构建产物 / 依赖
 node_modules/
 dist/

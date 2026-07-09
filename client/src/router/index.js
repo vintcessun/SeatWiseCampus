@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 const routes = [
   { path: '/', redirect: '/login' },
   { path: '/login', component: () => import('../views/Login.vue'), meta: { public: true } },
+  { path: '/register', component: () => import('../views/Register.vue'), meta: { public: true } },
   {
     path: '/student',
     component: () => import('../layouts/StudentLayout.vue'),
@@ -25,6 +26,7 @@ const routes = [
       { path: 'rooms', component: () => import('../views/admin/Rooms.vue') },
       { path: 'rooms/:roomId/layout', component: () => import('../views/admin/LayoutEditor.vue') },
       { path: 'rooms/:roomId/board', component: () => import('../views/admin/Board.vue') },
+      { path: 'students', component: () => import('../views/admin/StudentTracking.vue') },
       { path: 'reports', component: () => import('../views/admin/Reports.vue') },
       { path: 'blacklist', component: () => import('../views/admin/Blacklist.vue') }
     ]

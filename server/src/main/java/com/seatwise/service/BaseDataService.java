@@ -85,6 +85,33 @@ public class BaseDataService {
         }
     }
 
+    /** 按行列快速生成标准座位网格（指定过道列），覆盖原排布。 */
+    @Transactional
+    public void generateLayout(Long roomId, int rows, int cols, Integer aisleCol) {
+        rows = Math.max(1, Math.min(rows, 20));
+        cols = Math.max(1, Math.min(cols, 20));
+        seatMapper.delete(new LambdaQueryWrapper<Seat>().eq(Seat::getRoomId, roomId));
+        for (int r = 0; r < rows; r++) {
+            int seq = 1;
+            char rowLetter = (char) ('A' + r);
+            for (int c = 0; c < cols; c++) {
+                Seat s = new Seat();
+                s.setRoomId(roomId);
+                s.setRowIndex(r);
+                s.setColIndex(c);
+                if (aisleCol != null && c == aisleCol) {
+                    s.setCellType("AISLE");
+                    s.setEnabled(1);
+                } else {
+                    s.setCellType("SEAT");
+                    s.setSeatNo(rowLetter + "-" + String.format("%02d", seq++));
+                    s.setEnabled(1);
+                }
+                seatMapper.insert(s);
+            }
+        }
+    }
+
     public void toggleSeat(Long seatId, Integer enabled) {
         Seat s = seatMapper.selectById(seatId);
         if (s != null) {

@@ -4,6 +4,7 @@ import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
 import com.seatwise.common.R;
 import com.seatwise.dto.LoginDTO;
+import com.seatwise.dto.RegisterDTO;
 import com.seatwise.service.AuthService;
 import com.seatwise.vo.LoginVO;
 import jakarta.validation.Valid;
@@ -20,6 +21,11 @@ public class AuthController {
     @PostMapping("/auth/login")
     public R<LoginVO> login(@Valid @RequestBody LoginDTO dto) {
         return R.ok(authService.login(dto));
+    }
+
+    @PostMapping("/auth/register")
+    public R<LoginVO> register(@Valid @RequestBody RegisterDTO dto) {
+        return R.ok(authService.register(dto));
     }
 
     @PostMapping("/auth/logout")

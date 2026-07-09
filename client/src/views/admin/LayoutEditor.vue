@@ -8,6 +8,18 @@
       <el-button @click="$router.back()">返回</el-button>
     </div>
 
+    <el-card shadow="never" style="margin-bottom:16px">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <span style="font-size:13px;color:#5a6172">快速生成网格：</span>
+        <el-input-number v-model="genRows" :min="1" :max="20" size="small" /> <span style="font-size:13px">行</span>
+        <el-input-number v-model="genCols" :min="1" :max="20" size="small" /> <span style="font-size:13px">列</span>
+        <span style="font-size:13px">过道列</span>
+        <el-input-number v-model="genAisle" :min="0" :max="19" size="small" />
+        <el-button type="primary" @click="generate">生成布局</el-button>
+        <span style="font-size:12px;color:#c0392b">注意：会覆盖现有座位</span>
+      </div>
+    </el-card>
+
     <el-card shadow="never">
       <div class="seat-grid" :style="{ gridTemplateColumns: `repeat(${cols}, 40px)` }">
         <div v-for="cell in cells" :key="cell.rowIndex + '-' + cell.colIndex"
@@ -37,6 +49,15 @@ const route = useRoute()
 const roomId = route.params.roomId
 const cells = ref([])
 const cols = ref(8)
+const genRows = ref(6)
+const genCols = ref(8)
+const genAisle = ref(3)
+
+async function generate() {
+  await baseApi.generateLayout(roomId, { rows: genRows.value, cols: genCols.value, aisleCol: genAisle.value })
+  ElMessage.success('已生成 ' + genRows.value + '×' + genCols.value + ' 座位网格')
+  await load()
+}
 
 onMounted(load)
 async function load() {

@@ -68,16 +68,17 @@ async function main() {
   const rejected = results.filter(r => r.json?.code === 'SEAT_ALREADY_RESERVED').length
   ok('并发仅 1 个成功', succ === 1, `(成功=${succ}, 被拒=${rejected}, 共=${results.length})`)
 
-  console.log('[7] 签到 -> 签退')
+  console.log('[7] 未到签到时间拦截（预约为明日未来时段）')
   const ci = await api(`/api/reservations/${reservationId}/check-in`, { method: 'POST', token: s1 })
-  ok('签到成功', ci.json?.data?.status === 'IN_USE', `status=${ci.json?.data?.status}`)
-  const co = await api(`/api/reservations/${reservationId}/check-out`, { method: 'POST', token: s1 })
-  ok('签退成功', co.json?.data?.status === 'COMPLETED', `status=${co.json?.data?.status}`)
+  ok('未到时间签到被拒', ci.json?.code === 'SIGN_IN_TOO_EARLY', `code=${ci.json?.code}`)
+  ok('预约含签到窗口', !!create.json?.data?.signinStart, create.json?.data?.signinStart + '-' + create.json?.data?.signinDeadline)
 
-  console.log('[8] 座位释放校验')
+  console.log('[8] 取消并释放座位')
+  const cc = await api(`/api/reservations/${reservationId}/cancel`, { method: 'POST', token: s1 })
+  ok('取消成功', cc.json?.code === '0', `status=${cc.json?.data?.status}`)
   const board3 = (await api(`/api/study-rooms/${roomId}/board?date=${date}&start=14:00&end=16:00`, { token: s1 })).json.data
   const seatBack = board3.seats.find(s => s.seatId === seatId)
-  ok('签退后座位回到空闲', seatBack?.status === 'FREE', `status=${seatBack?.status}`)
+  ok('取消后座位回到空闲', seatBack?.status === 'FREE', `status=${seatBack?.status}`)
 
   console.log('[9] 单日次数限制')
   const pad = (h) => String(h).padStart(2, '0') + ':00'

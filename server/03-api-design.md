@@ -24,6 +24,8 @@
 | `DAILY_LIMIT_EXCEEDED` | 400 | 超单日次数 |
 | `USER_IN_BLACKLIST` | 403 | 黑名单 |
 | `SIGN_IN_TIMEOUT` | 400 | 签到超时 |
+| `SIGN_IN_TOO_EARLY` | 400 | 未到签到时间 |
+| `USERNAME_EXISTS` | 400 | 注册用户名已存在 |
 | `RESERVATION_NOT_FOUND` | 404 | 预约不存在 |
 | `INVALID_TIME_RANGE` | 400 | 时间非法 |
 | `SCORE_RULE_NOT_FOUND` | 400 | 积分规则缺失 |
@@ -34,8 +36,11 @@
 ### 3.1 登录认证
 | 方法 | URL | 权限 | 说明 |
 | --- | --- | --- | --- |
-| POST | `/api/auth/login` | 公共 | 登录 |
+| POST | `/api/auth/login` | 公共 | 登录（密码 BCrypt 校验） |
+| POST | `/api/auth/register` | 公共 | 自助注册（默认 STUDENT，注册即登录） |
 | POST | `/api/auth/logout` | 登录 | 登出 |
+
+> **密码安全**：已实现——注册/迁移均以 **BCrypt** 存储，登录用 `matches` 校验；启动时自动将历史明文密码升级为 BCrypt。传输层仍建议部署 HTTPS。
 
 > **注册功能**当前不纳入 MVP，用户由管理员预置 / 种子数据初始化。注册接口 `POST /api/auth/register` 为后续扩展预留。详见 [docs/05-extension-design.md](../docs/05-extension-design.md)。
 
@@ -61,6 +66,8 @@
 | POST/PUT/DELETE | `/api/study-rooms/**` | ADMIN | 自习室维护 |
 | GET | `/api/study-rooms/{id}/layout` | 登录 | 座位排布 |
 | PUT | `/api/study-rooms/{id}/layout` | ADMIN | 保存排布 |
+| POST | `/api/study-rooms/{id}/generate-layout?rows=&cols=&aisleCol=` | ADMIN | 按行列快速生成座位网格 |
+| POST | `/api/seats/{seatId}/toggle?enabled=` | ADMIN | 座位启用/禁用 |
 
 `GET /api/study-rooms/{id}/layout` 响应：
 ```json
@@ -85,6 +92,10 @@
 | POST | `/api/reservations/{id}/check-in` | STUDENT | 签到（PENDING_SIGN_IN→IN_USE） |
 | POST | `/api/reservations/{id}/check-out` | STUDENT | 签退（IN_USE→COMPLETED） |
 | POST | `/api/reservations/{id}/cancel` | STUDENT | 取消 |
+| GET | `/api/admin/reservations?keyword=&status=&date=` | ADMIN | 按学生姓名/用户名追踪预约 |
+
+> 预约响应新增字段：`signinStart`/`signinDeadline`（签到窗口）、`scoreDelta`（签退/取消的积分变化）。
+> 创建约束：`预约开始时间必须晚于当前时间`；签到须在窗口内，早于窗口返回 `SIGN_IN_TOO_EARLY`。
 
 请求 `POST /api/reservations`：
 ```json

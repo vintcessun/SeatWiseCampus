@@ -23,6 +23,9 @@
           </el-form-item>
           <el-button type="primary" size="large" style="width:100%" :loading="loading" @click="submit">登 录</el-button>
         </el-form>
+        <div style="text-align:right;margin-top:-8px">
+          <el-link type="primary" @click="$router.push('/register')">没有账号？注册</el-link>
+        </div>
         <el-divider>演示快捷登录</el-divider>
         <div style="display:flex;gap:10px;flex-wrap:wrap">
           <el-button @click="quick('admin','admin123')">管理员 admin</el-button>
