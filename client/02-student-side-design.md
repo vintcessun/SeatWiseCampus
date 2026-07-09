@@ -39,6 +39,8 @@
 ## 六、预约状态展示
 “我的预约”按状态分组：待签到/使用中/已完成/已取消/已释放，展示时间、座位、可操作按钮（签到、取消）。
 
+> **已知缺陷**：签到窗口起止时间未在预约详情中展示，且当前时间的签到按钮未校验是否在窗口内（详见 [docs/09-known-issues-v2.md](../docs/09-known-issues-v2.md) §Q1）。
+
 ## 七、签到与签退
 待签到项在签到窗口内可签到；`POST /api/reservations/{id}/check-in`；超时返回 `SIGN_IN_TIMEOUT` 并提示已释放。
 使用中（IN_USE）项可主动签退；`POST /api/reservations/{id}/check-out`，成功后座位释放为 FREE 并（MVP+）+2 积分。若未主动签退，后端在预约结束时间自动完成并释放（见 [../server/06-timeout-release-and-blacklist.md](../server/06-timeout-release-and-blacklist.md) §八）。

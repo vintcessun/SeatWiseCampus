@@ -59,6 +59,7 @@ flowchart LR
 ## 八、MVP+ 实现方案
 - 规则硬编码为常量类；结算挂到签退/取消/超时释放。
 - 排行榜先做周榜，Redis 缓存 + 定时刷新。
+- **已知缺陷**：「我的积分」显示不与排行榜同步刷新（详见 [docs/09-known-issues-v2.md](../docs/09-known-issues-v2.md) §Q2）。
 
 ## 九、后续扩展
 - 管理端**积分规则配置中心**（外置规则，见 [../docs/05](../docs/05-extension-design.md) G）。
