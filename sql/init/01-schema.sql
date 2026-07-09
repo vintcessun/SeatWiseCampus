@@ -128,6 +128,17 @@ CREATE TABLE blacklist_record (
     KEY idx_user_active (user_id, active)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE notification (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    type VARCHAR(24) NOT NULL,
+    title VARCHAR(128) NOT NULL,
+    content VARCHAR(512),
+    read_flag TINYINT NOT NULL DEFAULT 0,
+    created_time DATETIME,
+    KEY idx_user_read (user_id, read_flag)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE score_record (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id BIGINT NOT NULL,

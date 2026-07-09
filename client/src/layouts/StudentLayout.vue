@@ -16,6 +16,7 @@
       <el-header style="background:#fff;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #eef0f5">
         <div style="font-weight:600">智能校园自习室预约管理平台</div>
         <div style="display:flex;align-items:center;gap:14px">
+          <NotificationBell />
           <el-tag type="success" effect="plain">积分 {{ user.userInfo?.creditScore ?? 0 }}</el-tag>
           <span>{{ user.userInfo?.realName }}（学生）</span>
           <el-button link type="primary" @click="logout">退出</el-button>
@@ -34,6 +35,7 @@ import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import AiAssistant from '../components/AiAssistant.vue'
+import NotificationBell from '../components/NotificationBell.vue'
 
 const route = useRoute()
 const router = useRouter()

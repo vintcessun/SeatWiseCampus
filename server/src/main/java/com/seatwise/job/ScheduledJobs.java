@@ -3,6 +3,7 @@ package com.seatwise.job;
 import com.seatwise.entity.Reservation;
 import com.seatwise.service.ReservationService;
 import com.seatwise.sse.SseManager;
+import com.seatwise.sse.UserSseManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -25,6 +26,7 @@ public class ScheduledJobs {
 
     private final ReservationService reservationService;
     private final SseManager sse;
+    private final UserSseManager userSse;
 
     @Scheduled(fixedDelay = 5000)
     public void releaseAndComplete() {
@@ -52,5 +54,6 @@ public class ScheduledJobs {
     @Scheduled(fixedDelay = 15000)
     public void heartbeat() {
         sse.heartbeatAll();
+        userSse.heartbeatAll();
     }
 }

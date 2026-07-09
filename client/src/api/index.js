@@ -58,6 +58,13 @@ export const aiApi = {
   assistant: (data) => http.post('/ai/assistant', data)
 }
 
+export const notificationApi = {
+  list: () => http.get('/notifications'),
+  unread: () => http.get('/notifications/unread-count'),
+  read: (id) => http.post(`/notifications/${id}/read`),
+  readAll: () => http.post('/notifications/read-all')
+}
+
 export const blacklistApi = {
   me: () => http.get('/blacklist/me'),
   list: () => http.get('/admin/blacklist'),

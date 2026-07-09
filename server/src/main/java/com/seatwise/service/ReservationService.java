@@ -38,6 +38,7 @@ public class ReservationService {
     private final RedissonClient redisson;
     private final SseManager sse;
     private final ScoreService scoreService;
+    private final NotificationService notificationService;
     private final SeatwiseProps props;
     private final TransactionTemplate tx;
 
@@ -171,6 +172,8 @@ public class ReservationService {
             releaseSlots(r.getId());
         });
         scoreService.addScore(userId, 2, "CHECKOUT_OK", r.getId());
+        notificationService.notify(userId, "SCORE", "积分 +2",
+                "按时签退并完成本次预约（" + seatLabel(r) + "）");
         broadcastSeat(r.getRoomId(), r.getDate(), r.getSeatId(), "FREE", "seat_released");
         ReservationVO vo = toVO(r);
         vo.setScoreDelta(2);
@@ -188,7 +191,11 @@ public class ReservationService {
             reservationMapper.updateById(r);
             releaseSlots(r.getId());
         });
-        if (late) scoreService.addScore(userId, -1, "CANCEL_LATE", r.getId());
+        if (late) {
+            scoreService.addScore(userId, -1, "CANCEL_LATE", r.getId());
+            notificationService.notify(userId, "SCORE", "积分 -1",
+                    "预约开始前 30 分钟内取消（" + seatLabel(r) + "）");
+        }
         broadcastSeat(r.getRoomId(), r.getDate(), r.getSeatId(), "FREE", "seat_released");
         ReservationVO vo = toVO(r);
         vo.setScoreDelta(late ? -1 : 0);
@@ -212,6 +219,14 @@ public class ReservationService {
             }
         });
         scoreService.addScore(userId, -3, "NO_SHOW", r.getId());
+        notificationService.notify(userId, "SCORE", "积分 -3",
+                "预约开始后 15 分钟内未签到，座位已释放（" + seatLabel(r) + "）");
+        User u2 = userMapper.selectById(userId);
+        if (u2 != null && u2.getNoShowCount() != null && u2.getNoShowCount() >= props.getNoshowThreshold()) {
+            notificationService.notify(userId, "BLACKLIST", "已进入黑名单",
+                    "爽约累计达 " + props.getNoshowThreshold() + " 次，" + props.getBlacklistDays()
+                            + " 天内暂不能预约，可继续登录与查看记录");
+        }
         broadcastSeat(r.getRoomId(), r.getDate(), r.getSeatId(), "FREE", "seat_released");
     }
 
@@ -243,6 +258,12 @@ public class ReservationService {
         if (r == null) throw new BizException(BizError.RESERVATION_NOT_FOUND);
         if (!r.getUserId().equals(userId)) throw new BizException(BizError.PERMISSION_DENIED);
         return r;
+    }
+
+    private String seatLabel(Reservation r) {
+        Seat seat = seatMapper.selectById(r.getSeatId());
+        StudyRoom room = roomMapper.selectById(r.getRoomId());
+        return (room != null ? room.getName() : "") + " " + (seat != null ? seat.getSeatNo() : "");
     }
 
     private void releaseSlots(Long reservationId) {
