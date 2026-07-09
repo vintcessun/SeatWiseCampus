@@ -139,6 +139,157 @@ public class ReservationService {
         }
     }
 
+    // ===================== 组队相邻预约（原子多座） =====================
+    /** 座位→成员用户名 的一次分配 */
+    public record GroupSeatAssign(Long seatId, String username) {}
+
+    /**
+     * 为多名成员一次性预约同一自习室、同一时段的相邻座位：全部成功或整体回滚。
+     * 复用单座的校验与状态机；并发用「有序 Redisson 锁 + 单事务 + 唯一索引兜底」保证原子性。
+     */
+    public List<ReservationVO> createGroup(Long roomId, LocalDate date, LocalTime startTime, LocalTime endTime,
+                                           List<GroupSeatAssign> members) {
+        int slotMin = props.getSlotMinutes();
+        if (members == null || members.isEmpty())
+            throw new BizException(BizError.BAD_REQUEST, "组队成员不能为空");
+        if (members.size() > props.getGroupMaxSeats())
+            throw new BizException(BizError.BAD_REQUEST, "组队座位数超过上限 " + props.getGroupMaxSeats());
+
+        // 座位 / 成员去重
+        Set<Long> seatIds = new LinkedHashSet<>();
+        Set<String> unames = new LinkedHashSet<>();
+        for (GroupSeatAssign m : members) {
+            if (m.seatId() == null || m.username() == null || m.username().isBlank())
+                throw new BizException(BizError.BAD_REQUEST, "成员信息不完整");
+            if (!seatIds.add(m.seatId())) throw new BizException(BizError.BAD_REQUEST, "座位重复分配");
+            if (!unames.add(m.username())) throw new BizException(BizError.BAD_REQUEST, "成员重复：" + m.username());
+        }
+
+        // 时间 / 自习室校验（与单座一致）
+        StudyRoom room = roomMapper.selectById(roomId);
+        if (room == null) throw new BizException(BizError.INVALID_TIME_RANGE, "自习室不存在");
+        if (!startTime.isBefore(endTime)) throw new BizException(BizError.INVALID_TIME_RANGE);
+        if (startTime.getMinute() % slotMin != 0 || endTime.getMinute() % slotMin != 0)
+            throw new BizException(BizError.INVALID_TIME_RANGE, "时间需按 " + slotMin + " 分钟对齐");
+        int startSlot = SlotUtil.toSlot(startTime, slotMin);
+        int endSlot = SlotUtil.toSlot(endTime, slotMin);
+        if (startSlot >= endSlot) throw new BizException(BizError.INVALID_TIME_RANGE);
+        if (endSlot - startSlot > props.getMaxSlotsPerReservation())
+            throw new BizException(BizError.INVALID_TIME_RANGE, "单次预约时长超上限");
+        if (room.getOpenStart() != null && startTime.isBefore(room.getOpenStart()))
+            throw new BizException(BizError.INVALID_TIME_RANGE, "早于开放时间");
+        if (room.getOpenEnd() != null && endTime.isAfter(room.getOpenEnd()))
+            throw new BizException(BizError.INVALID_TIME_RANGE, "晚于开放时间");
+        if (LocalDateTime.of(date, startTime).isBefore(LocalDateTime.now()))
+            throw new BizException(BizError.INVALID_TIME_RANGE, "预约开始时间需晚于当前时间");
+
+        // 座位存在 / 属房 / 可预约 + 相邻
+        List<Seat> seats = new ArrayList<>();
+        for (Long sid : seatIds) {
+            Seat seat = seatMapper.selectById(sid);
+            if (seat == null || !roomId.equals(seat.getRoomId()) || !"SEAT".equals(seat.getCellType())
+                    || seat.getEnabled() == null || seat.getEnabled() == 0)
+                throw new BizException(BizError.BAD_REQUEST, "座位不可预约");
+            seats.add(seat);
+        }
+        ensureAdjacent(seats);
+
+        // 成员解析 + 单人规则（黑名单 / 单日次数 / 自身时段冲突）
+        LinkedHashMap<Long, Long> seatToUser = new LinkedHashMap<>();
+        for (GroupSeatAssign m : members) {
+            User u = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getUsername, m.username()));
+            if (u == null || !"STUDENT".equals(u.getRole()))
+                throw new BizException(BizError.BAD_REQUEST, "成员不存在或非学生：" + m.username());
+            checkBlacklist(u.getId());
+            Long dayCount = reservationMapper.selectCount(new LambdaQueryWrapper<Reservation>()
+                    .eq(Reservation::getUserId, u.getId()).eq(Reservation::getDate, date)
+                    .in(Reservation::getStatus, List.of("PENDING_SIGN_IN", "IN_USE", "COMPLETED")));
+            if (dayCount != null && dayCount >= props.getDailyLimit())
+                throw new BizException(BizError.DAILY_LIMIT_EXCEEDED, m.username() + " 今日预约已达上限");
+            List<Reservation> ex = reservationMapper.selectList(new LambdaQueryWrapper<Reservation>()
+                    .eq(Reservation::getUserId, u.getId()).eq(Reservation::getDate, date)
+                    .in(Reservation::getStatus, List.of("PENDING_SIGN_IN", "IN_USE")));
+            for (Reservation r : ex)
+                if (r.getStartSlot() < endSlot && r.getEndSlot() > startSlot)
+                    throw new BizException(BizError.RESERVATION_TIME_CONFLICT, m.username() + " 在该时段已有预约");
+            seatToUser.put(m.seatId(), u.getId());
+        }
+
+        List<Integer> slots = SlotUtil.expand(startSlot, endSlot);
+
+        // 有序取锁避免不同组交叉死锁；未取到也继续（唯一索引兜底）
+        List<Long> ordered = new ArrayList<>(seatIds);
+        Collections.sort(ordered);
+        List<RLock> acquired = new ArrayList<>();
+        try {
+            for (Long sid : ordered) {
+                RLock l = redisson.getLock("seat:" + sid + ":date:" + date + ":slots:" + startSlot + "-" + endSlot);
+                try {
+                    if (l.tryLock(3, 10, TimeUnit.SECONDS)) acquired.add(l);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+            List<Reservation> created;
+            try {
+                created = tx.execute(status -> {
+                    List<Reservation> list = new ArrayList<>();
+                    for (Map.Entry<Long, Long> e : seatToUser.entrySet()) {
+                        Long sid = e.getKey();
+                        Reservation r = new Reservation();
+                        r.setUserId(e.getValue());
+                        r.setSeatId(sid);
+                        r.setRoomId(roomId);
+                        r.setDate(date);
+                        r.setStartSlot(startSlot);
+                        r.setEndSlot(endSlot);
+                        r.setStatus("PENDING_SIGN_IN");
+                        reservationMapper.insert(r);
+                        for (Integer s : slots) {
+                            ReservationSlot rs = new ReservationSlot();
+                            rs.setReservationId(r.getId());
+                            rs.setSeatId(sid);
+                            rs.setDate(date);
+                            rs.setSlotIndex(s);
+                            slotMapper.insert(rs);   // 唯一键冲突 -> 整单回滚
+                        }
+                        list.add(r);
+                    }
+                    return list;
+                });
+            } catch (DuplicateKeyException e) {
+                throw new BizException(BizError.SEAT_ALREADY_RESERVED, "组队座位中已有座位被占用，整单已取消");
+            }
+            List<ReservationVO> vos = new ArrayList<>();
+            for (Reservation r : created) {
+                redisson.getBucket(BoardService.holdKey(roomId, date, r.getSeatId())).delete();
+                broadcastSeat(roomId, date, r.getSeatId(), "RESERVED", "seat_reserved");
+                notificationService.notify(r.getUserId(), "GROUP", "组队预约成功",
+                        "你已加入组队自习：" + seatLabel(r) + "，"
+                                + SlotUtil.label(startSlot, slotMin) + "-" + SlotUtil.label(endSlot, slotMin));
+                vos.add(toVO(r));
+            }
+            return vos;
+        } finally {
+            for (RLock l : acquired) if (l.isHeldByCurrentThread()) l.unlock();
+        }
+    }
+
+    private void ensureAdjacent(List<Seat> seats) {
+        if (seats.size() <= 1) return;
+        Integer row = seats.get(0).getRowIndex();
+        List<Integer> cols = new ArrayList<>();
+        for (Seat s : seats) {
+            if (s.getRowIndex() == null || !s.getRowIndex().equals(row) || s.getColIndex() == null)
+                throw new BizException(BizError.BAD_REQUEST, "组队座位需在同一排");
+            cols.add(s.getColIndex());
+        }
+        Collections.sort(cols);
+        for (int i = 1; i < cols.size(); i++)
+            if (cols.get(i) - cols.get(i - 1) != 1)
+                throw new BizException(BizError.BAD_REQUEST, "组队座位需连续相邻");
+    }
+
     // ===================== 签到 =====================
     public ReservationVO checkIn(Long userId, Long reservationId) {
         Reservation r = mustOwn(userId, reservationId);

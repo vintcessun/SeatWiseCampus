@@ -25,4 +25,6 @@ public class SeatwiseProps {
     private int maxSlotsPerReservation = 8;
     /** 临时锁座保留秒数 */
     private int holdSeconds = 90;
+    /** 组队相邻预约单次最多座位数 */
+    private int groupMaxSeats = 6;
 }

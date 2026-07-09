@@ -25,11 +25,28 @@
           全部占满，加入候补队列
         </el-button>
         <el-tag v-else type="success" effect="plain" size="small">当前 {{ freeCount }} 个空位</el-tag>
+        <el-divider direction="vertical" />
+        <el-switch v-model="groupMode" active-text="组队相邻预约" @change="onGroupToggle" />
       </div>
     </el-card>
 
+    <el-card v-if="groupMode" shadow="never" style="margin-bottom:16px;border:1px solid #8f5bff33">
+      <div style="font-weight:600;margin-bottom:8px">👥 组队相邻预约<span style="color:#8a93a6;font-weight:400;font-size:13px">（点座位图选择<strong>同一排连续</strong>的空位，为每位成员填写用户名；全部成功或整体取消）</span></div>
+      <el-empty v-if="!groupSeats.length" description="请在下方座位图选择相邻空位" :image-size="50" />
+      <div v-for="(g, i) in groupSeats" :key="g.seatId" style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <el-tag type="primary" effect="plain">座位 {{ g.seatNo }}</el-tag>
+        <el-input v-model="g.username" placeholder="成员用户名" style="width:180px" :prefix-icon="User" />
+        <span v-if="i === 0" style="color:#8a93a6;font-size:12px">默认发起人</span>
+        <el-button link type="danger" @click="removeGroupSeat(g.seatId)">移除</el-button>
+      </div>
+      <el-button type="primary" :loading="submittingGroup" :disabled="!groupSeats.length" @click="submitGroup">
+        提交组队预约（{{ groupSeats.length }} 座）
+      </el-button>
+      <el-button v-if="groupSeats.length" @click="groupSeats = []">清空</el-button>
+    </el-card>
+
     <el-card shadow="never">
-      <SeatGrid :cells="board.seats || []" :cols="board.cols || 8" :now-ms="nowMs" selectable @select="onSelect" />
+      <SeatGrid :cells="board.seats || []" :cols="board.cols || 8" :now-ms="nowMs" :selected-ids="selectedIds" selectable @select="onSelect" />
     </el-card>
 
     <el-dialog v-model="dialog" title="确认预约" width="380px" @close="onDialogClose">
@@ -65,7 +82,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Refresh, Bell } from '@element-plus/icons-vue'
+import { Refresh, Bell, User } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import SeatGrid from '../../components/SeatGrid.vue'
 import { boardApi, reservationApi, holdApi, nearbyApi, waitlistApi } from '../../api'
@@ -108,6 +125,44 @@ async function joinWaitlist() {
   }
 }
 
+// ===== 组队相邻预约 =====
+const groupMode = ref(false)
+const groupSeats = ref([]) // [{ seatId, seatNo, username }]
+const submittingGroup = ref(false)
+const selectedIds = computed(() => groupSeats.value.map(s => s.seatId))
+
+function onGroupToggle(v) { if (!v) groupSeats.value = [] }
+function removeGroupSeat(seatId) {
+  const i = groupSeats.value.findIndex(s => s.seatId === seatId)
+  if (i >= 0) groupSeats.value.splice(i, 1)
+}
+function toggleGroupSeat(cell) {
+  const i = groupSeats.value.findIndex(s => s.seatId === cell.seatId)
+  if (i >= 0) { groupSeats.value.splice(i, 1); return }
+  if (groupSeats.value.length >= 6) { ElMessage.warning('单次组队最多 6 个相邻座位'); return }
+  const defaultName = groupSeats.value.length === 0 ? (user.userInfo?.username || '') : ''
+  groupSeats.value.push({ seatId: cell.seatId, seatNo: cell.seatNo, username: defaultName })
+}
+async function submitGroup() {
+  if (start.value >= end.value) { ElMessage.warning('开始时间必须早于结束时间'); return }
+  if (new Date(`${date.value}T${start.value}:00`).getTime() <= Date.now()) { ElMessage.warning('预约开始时间需晚于当前时间'); return }
+  if (!groupSeats.value.length) { ElMessage.warning('请先在座位图选择相邻空位'); return }
+  if (groupSeats.value.some(s => !s.username.trim())) { ElMessage.warning('请为每个座位填写成员用户名'); return }
+  submittingGroup.value = true
+  try {
+    const res = await reservationApi.group({
+      roomId: Number(roomId), date: date.value, startTime: start.value, endTime: end.value,
+      members: groupSeats.value.map(s => ({ seatId: s.seatId, username: s.username.trim() }))
+    })
+    ElMessage.success(`组队预约成功！已为小组原子锁定 ${res.length} 个相邻座位`)
+    groupSeats.value = []
+    await reload()
+  } catch (e) {
+    ElMessage.error(e?.message || '组队预约失败（整单已取消）')
+    await reload()
+  } finally { submittingGroup.value = false }
+}
+
 onMounted(() => {
   reload(); openStream()
   ticker = setInterval(() => { nowMs.value = Date.now() }, 1000)
@@ -140,6 +195,7 @@ function setSeat(seatId, patch) {
 }
 
 async function onSelect(cell) {
+  if (groupMode.value) { toggleGroupSeat(cell); return }
   if (start.value >= end.value) { ElMessage.warning('开始时间必须早于结束时间'); return }
   if (new Date(`${date.value}T${start.value}:00`).getTime() <= Date.now()) {
     ElMessage.warning('预约开始时间需晚于当前时间'); return

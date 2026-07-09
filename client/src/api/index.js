@@ -35,6 +35,7 @@ export const holdApi = {
 
 export const reservationApi = {
   create: (data) => http.post('/reservations', data),
+  group: (data) => http.post('/reservations/group', data),
   mine: () => http.get('/reservations/me'),
   checkIn: (id) => http.post(`/reservations/${id}/check-in`),
   checkOut: (id) => http.post(`/reservations/${id}/check-out`),

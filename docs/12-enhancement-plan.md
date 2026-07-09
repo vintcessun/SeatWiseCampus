@@ -15,7 +15,7 @@ flowchart LR
     N[① 通知中心+每用户SSE] --> E[② 管理端实时事件流]
     E --> C[③ 冲突后智能替代方案]
     C --> D[④ 首页数据概览Dashboard]
-    D --> W[⑤ 候补队列 ✅] --> G[⑥ 组队相邻预约] --> H[⑦ 历史回放]
+    D --> W[⑤ 候补队列 ✅] --> G[⑥ 组队相邻预约 ✅] --> H[⑦ 历史回放]
 ```
 
 ## ① 站内通知中心 + 每用户 SSE（✅ 已实现 2026-07-09）
@@ -40,8 +40,13 @@ flowchart LR
 - 串联超时释放 / 取消 / 推送 / 临时锁，形成完整业务闭环。
 - 落地：表 `waitlist`；`Waitlist`/`WaitlistMapper`/`WaitlistService`/`WaitlistController`；`ReservationService` 四个释放点回调 `onSeatReleased`；前端 `waitlistApi` + `views/student/Waitlist.vue` + 菜单/路由。测试 `scripts/test-waitlist.mjs` 11/11。
 
-## ⑥ 组队相邻预约（后续，大）
-- 讨论室多人相邻座位，必须全部成功否则整体回滚——展示分布式并发原子性。
+## ⑥ 组队相邻预约（✅ 已实现 2026-07-09）
+- 一次为多名成员预约**同一自习室、同一时段的相邻座位**（同排连续列），全部成功或整体回滚，展示分布式并发原子性。
+- 并发：所有座位按 seatId **升序取 Redisson 锁**避免交叉死锁；**单事务**批量插入 `reservation`+`reservation_slot`，任一 `uk_seat_date_slot` 冲突→整单回滚；成功后逐座清理临时锁、SSE `seat_reserved`、通知每位成员（type=`GROUP`）。
+- 每座仍是独立 `reservation`，签到/超时/候补/看板完全复用；按成员拆分归属避免单人同时段自冲突。
+- 接口 `POST /api/reservations/group`；`groupMaxSeats` 默认 6。设计见 [server/16-group-reservation.md](../server/16-group-reservation.md)。
+- 落地：`GroupReservationDTO`；`ReservationService.createGroup/ensureAdjacent`；前端 Seats 页「组队相邻预约」开关+成员分配+网格多选高亮。
+- 测试 `scripts/test-group.mjs` 7/7：含**并发两组抢重叠相邻座位，恰好一组整体成功、败组原子回滚**。
 
 ## ⑦ 历史回放（后续，大）
 - 保存关键座位状态事件，管理端拖动播放条重建历史，回答"哪个时刻最拥挤"。

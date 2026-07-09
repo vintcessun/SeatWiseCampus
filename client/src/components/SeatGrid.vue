@@ -29,6 +29,7 @@ const props = defineProps({
   cols: { type: Number, default: 8 },
   selectable: { type: Boolean, default: false },
   selectedSeatId: { type: [Number, String], default: null },
+  selectedIds: { type: Array, default: () => [] },
   nowMs: { type: Number, default: 0 }
 })
 const emit = defineEmits(['select'])
@@ -57,6 +58,7 @@ function cellClass(cell) {
   if (cell.mine && st === 'HELD') cls.push('seat-mine-hold')
   else if (cell.mine) cls.push('seat-mine')
   if (props.selectedSeatId && cell.seatId === props.selectedSeatId) cls.push('seat-selected')
+  if (props.selectedIds && props.selectedIds.includes(cell.seatId)) cls.push('seat-selected')
   if (props.selectable && cell.cellType === 'SEAT' && st === 'FREE') cls.push('clickable')
   return cls
 }

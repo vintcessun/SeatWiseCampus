@@ -4,6 +4,7 @@ import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.dev33.satoken.stp.StpUtil;
 import com.seatwise.common.R;
+import com.seatwise.dto.GroupReservationDTO;
 import com.seatwise.dto.ReservationDTO;
 import com.seatwise.service.ReservationService;
 import com.seatwise.vo.ReservationVO;
@@ -29,6 +30,16 @@ public class ReservationController {
     public R<ReservationVO> create(@Valid @RequestBody ReservationDTO dto) {
         return R.ok(reservationService.create(uid(), dto.getRoomId(), dto.getSeatId(),
                 dto.getDate(), dto.getStartTime(), dto.getEndTime()));
+    }
+
+    @SaCheckRole("STUDENT")
+    @PostMapping("/group")
+    public R<List<ReservationVO>> createGroup(@Valid @RequestBody GroupReservationDTO dto) {
+        List<ReservationService.GroupSeatAssign> members = dto.getMembers().stream()
+                .map(m -> new ReservationService.GroupSeatAssign(m.getSeatId(), m.getUsername()))
+                .toList();
+        return R.ok(reservationService.createGroup(dto.getRoomId(), dto.getDate(),
+                dto.getStartTime(), dto.getEndTime(), members));
     }
 
     @SaCheckLogin
