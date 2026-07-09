@@ -13,6 +13,7 @@ const routes = [
       { path: 'home', component: () => import('../views/student/Home.vue') },
       { path: 'rooms', component: () => import('../views/student/Rooms.vue') },
       { path: 'rooms/:roomId/seats', component: () => import('../views/student/Seats.vue') },
+      { path: 'spacetime', component: () => import('../views/student/Spacetime.vue') },
       { path: 'reservations', component: () => import('../views/student/Reservations.vue') },
       { path: 'waitlist', component: () => import('../views/student/Waitlist.vue') },
       { path: 'report', component: () => import('../views/student/StudyReport.vue') },

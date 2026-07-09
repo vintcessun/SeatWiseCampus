@@ -19,9 +19,9 @@ const pad = x => String(Math.floor(x / 60) % 24).padStart(2, '0') + ':' + String
   const seats = (await api(`/study-rooms/${roomId}/board?date=${date}`, { token: toks[1] })).data.seats
     .filter(s => s.cellType === 'SEAT' && s.status === 'FREE').map(s => s.seatId)
 
-  // 从下一个整点后的时段开始（保证 start > now）
+  // 从下一个整点后的时段开始（保证 start > now），且不早于开馆 08:00
   const now = new Date(); let nowSlotMin = now.getHours() * 60 + now.getMinutes()
-  let s0 = Math.ceil(nowSlotMin / 30) * 30 + 30  // 留出余量
+  let s0 = Math.max(Math.ceil(nowSlotMin / 30) * 30 + 30, 8 * 60)  // 留出余量 + 开馆时间
   const windows = []
   for (let s = s0; s + 60 <= 22 * 60 && windows.length < 6; s += 60) windows.push(s)
   if (!windows.length) { console.log('当前已接近闭馆，改用最后 3 个时段'); for (let s = 19 * 60; s < 22 * 60; s += 60) windows.push(s) }

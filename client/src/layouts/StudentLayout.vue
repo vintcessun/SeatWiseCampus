@@ -8,6 +8,7 @@
                active-text-color="#fff">
         <el-menu-item index="/student/home"><el-icon><HomeFilled /></el-icon><span>首页概览</span></el-menu-item>
         <el-menu-item index="/student/rooms"><el-icon><Search /></el-icon><span>选座预约</span></el-menu-item>
+        <el-menu-item index="/student/spacetime"><el-icon><Compass /></el-icon><span>时空座位图</span></el-menu-item>
         <el-menu-item index="/student/reservations"><el-icon><Tickets /></el-icon><span>我的预约</span></el-menu-item>
         <el-menu-item index="/student/waitlist"><el-icon><BellFilled /></el-icon><span>我的候补</span></el-menu-item>
         <el-menu-item index="/student/report"><el-icon><DataLine /></el-icon><span>自习报告</span></el-menu-item>

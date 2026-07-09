@@ -109,9 +109,16 @@ const user = useUserStore()
 const roomId = route.params.roomId
 const altDialog = ref(false)
 const alts = ref([])
-const date = ref(todayLocal())
-const start = ref('14:00')
-const end = ref('16:00')
+// 支持从「时空座位图」跳转预填 日期/开始时间
+const date = ref(route.query.date || todayLocal())
+const start = ref(route.query.start || '14:00')
+const end = ref(route.query.end || addHours(route.query.start, 2) || '16:00')
+function addHours(hhmm, h) {
+  if (!hhmm) return null
+  const [H, M] = hhmm.split(':').map(Number)
+  const t = (H + h) % 24
+  return String(t).padStart(2, '0') + ':' + String(M).padStart(2, '0')
+}
 const board = reactive({ seats: [], cols: 8, roomName: '' })
 const dialog = ref(false)
 const picked = ref(null)
