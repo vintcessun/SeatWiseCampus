@@ -28,6 +28,11 @@ export const boardApi = {
   snapshot: (roomId, params) => http.get(`/study-rooms/${roomId}/board`, { params })
 }
 
+export const holdApi = {
+  hold: (data) => http.post('/holds', data),
+  release: (data) => http.post('/holds/release', data)
+}
+
 export const reservationApi = {
   create: (data) => http.post('/reservations', data),
   mine: () => http.get('/reservations/me'),

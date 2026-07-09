@@ -7,6 +7,7 @@ public enum BizError {
     AUTH_REQUIRED(401, "请先登录"),
     PERMISSION_DENIED(403, "无权限"),
     SEAT_ALREADY_RESERVED(409, "座位已被抢占，请重新选择"),
+    SEAT_ALREADY_HELD(409, "座位正被他人选择中，请稍后再试"),
     RESERVATION_TIME_CONFLICT(409, "你在该时段已有预约"),
     DAILY_LIMIT_EXCEEDED(400, "今日预约次数已达上限"),
     USER_IN_BLACKLIST(403, "你已被列入黑名单，暂不能预约"),

@@ -7,6 +7,8 @@ import com.seatwise.mapper.*;
 import com.seatwise.vo.BoardVO;
 import com.seatwise.vo.SeatStatusVO;
 import lombok.RequiredArgsConstructor;
+import org.redisson.api.RBucket;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +23,12 @@ public class BoardService {
     private final StudyRoomMapper studyRoomMapper;
     private final ReservationMapper reservationMapper;
     private final SeatwiseProps props;
+    private final RedissonClient redisson;
+
+    /** 临时锁座 Redis key */
+    public static String holdKey(Long roomId, LocalDate date, Long seatId) {
+        return "hold:" + roomId + ":" + date + ":" + seatId;
+    }
 
     /**
      * 构建看板快照。currentUserId 可空（未登录/管理员查看）。
@@ -63,6 +71,19 @@ public class BoardService {
                 Reservation r = occupied.get(seat.getId());
                 if (r == null) {
                     vo.setStatus("FREE");
+                    // 临时锁座（Redis TTL）
+                    RBucket<Object> hold = redisson.getBucket(holdKey(roomId, date, seat.getId()));
+                    Object holder = hold.get();
+                    if (holder != null) {
+                        long ttl = hold.remainTimeToLive();
+                        if (ttl > 0) {
+                            vo.setStatus("HELD");
+                            Long by = Long.valueOf(holder.toString());
+                            vo.setHeldBy(by);
+                            vo.setHoldExpireAt(System.currentTimeMillis() + ttl);
+                            vo.setMine(currentUserId != null && currentUserId.equals(by));
+                        }
+                    }
                 } else {
                     vo.setStatus("IN_USE".equals(r.getStatus()) ? "USING" : "RESERVED");
                     vo.setMine(currentUserId != null && currentUserId.equals(r.getUserId()));

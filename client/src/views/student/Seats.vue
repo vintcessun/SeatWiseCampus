@@ -8,6 +8,7 @@
           <el-tag size="small" :type="sseOk ? 'success' : 'info'" effect="plain">
             {{ sseOk ? '实时连接中' : '连接中…' }}
           </el-tag>
+          <span style="margin-left:8px;color:#b8860b">🔒 点座后为你保留 {{ holdSeconds }} 秒，其他人会看到"选择中"</span>
         </div>
       </div>
       <el-button @click="$router.back()">返回</el-button>
@@ -15,8 +16,8 @@
 
     <el-card shadow="never" style="margin-bottom:16px">
       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-        <el-date-picker v-model="date" type="date" value-format="YYYY-MM-DD" :clearable="false" @change="reload" />
-        <el-time-select v-model="start" start="08:00" end="21:30" step="00:30" placeholder="开始" style="width:130px" @change="reload" />
+        <el-date-picker v-model="date" type="date" value-format="YYYY-MM-DD" :clearable="false" @change="onWindowChange" />
+        <el-time-select v-model="start" start="08:00" end="21:30" step="00:30" placeholder="开始" style="width:130px" @change="onWindowChange" />
         <el-time-select v-model="end" start="08:30" end="22:00" step="00:30" placeholder="结束" style="width:130px" @change="reload" />
         <el-button :icon="Refresh" @click="reload">刷新座位</el-button>
         <span style="color:#8a93a6;font-size:13px">点击绿色空闲座位进行预约</span>
@@ -24,33 +25,37 @@
     </el-card>
 
     <el-card shadow="never">
-      <SeatGrid :cells="board.seats || []" :cols="board.cols || 8" selectable @select="onSelect" />
+      <SeatGrid :cells="board.seats || []" :cols="board.cols || 8" :now-ms="nowMs" selectable @select="onSelect" />
     </el-card>
 
-    <el-dialog v-model="dialog" title="确认预约" width="380px">
+    <el-dialog v-model="dialog" title="确认预约" width="380px" @close="onDialogClose">
       <p>自习室：{{ board.roomName }}</p>
       <p>座位：<b>{{ picked?.seatNo }}</b></p>
       <p>日期：{{ date }}</p>
       <p>时段：{{ start }} - {{ end }}</p>
+      <el-alert type="warning" :closable="false" show-icon
+        :title="`该座位已为你临时保留，剩余 ${dialogRemain} 秒，请尽快确认`" style="margin-top:8px" />
       <template #footer>
         <el-button @click="dialog=false">取消</el-button>
-        <el-button type="primary" :loading="submitting" @click="submit">确认预约</el-button>
+        <el-button type="primary" :loading="submitting" :disabled="dialogRemain<=0" @click="submit">确认预约</el-button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
+import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import { Refresh } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import SeatGrid from '../../components/SeatGrid.vue'
-import { boardApi, reservationApi } from '../../api'
+import { boardApi, reservationApi, holdApi } from '../../api'
 import { connectBoardStream } from '../../api/boardStream'
 import { todayLocal } from '../../utils/date'
+import { useUserStore } from '../../stores/user'
 
 const route = useRoute()
+const user = useUserStore()
 const roomId = route.params.roomId
 const date = ref(todayLocal())
 const start = ref('14:00')
@@ -58,47 +63,63 @@ const end = ref('16:00')
 const board = reactive({ seats: [], cols: 8, roomName: '' })
 const dialog = ref(false)
 const picked = ref(null)
+const pickedExpireAt = ref(0)
 const submitting = ref(false)
+const confirmed = ref(false)
 const sseOk = ref(false)
+const nowMs = ref(Date.now())
+const holdSeconds = 90
 let stream = null
+let ticker = null
 
-onMounted(() => { reload(); openStream() })
-onBeforeUnmount(() => { if (stream) stream.close() })
+const myId = computed(() => user.userInfo?.id)
+const dialogRemain = computed(() => Math.max(0, Math.ceil((pickedExpireAt.value - nowMs.value) / 1000)))
+
+onMounted(() => {
+  reload(); openStream()
+  ticker = setInterval(() => { nowMs.value = Date.now() }, 1000)
+})
+onBeforeUnmount(() => { if (stream) stream.close(); if (ticker) clearInterval(ticker); releaseCurrent() })
 
 async function reload() {
   const data = await boardApi.snapshot(roomId, { date: date.value, start: start.value, end: end.value })
   Object.assign(board, data)
 }
+function onWindowChange() { openStream(); reload() }
 
 function openStream() {
   if (stream) stream.close()
   stream = connectBoardStream({ roomId, date: date.value }, {
     onOpen: () => (sseOk.value = true),
     onError: () => (sseOk.value = false),
-    seat_reserved: (p) => applyStatus(p, 'RESERVED'),
-    seat_released: (p) => applyStatus(p, 'FREE'),
-    seat_in_use: (p) => applyStatus(p, 'USING'),
-    seat_disabled: (p) => applyStatus(p, 'DISABLED')
+    seat_reserved: (p) => setSeat(p.seatId, { status: 'RESERVED', heldBy: null, holdExpireAt: null }),
+    seat_released: (p) => setSeat(p.seatId, { status: 'FREE', heldBy: null, holdExpireAt: null }),
+    seat_in_use: (p) => setSeat(p.seatId, { status: 'USING' }),
+    seat_disabled: (p) => setSeat(p.seatId, { status: 'DISABLED' }),
+    seat_hold: (p) => setSeat(p.seatId, { status: 'HELD', heldBy: p.byUserId, holdExpireAt: p.expireAt, mine: p.byUserId === myId.value }),
+    hold_released: (p) => setSeat(p.seatId, { status: 'FREE', heldBy: null, holdExpireAt: null, mine: false })
   })
 }
 
-function applyStatus(p, status) {
-  const seat = (board.seats || []).find(s => s.seatId === p.seatId)
-  if (seat) seat.status = status
+function setSeat(seatId, patch) {
+  const seat = (board.seats || []).find(s => s.seatId === seatId)
+  if (seat) Object.assign(seat, patch)
 }
 
-function onSelect(cell) {
-  if (start.value >= end.value) {
-    ElMessage.warning('开始时间必须早于结束时间')
-    return
+async function onSelect(cell) {
+  if (start.value >= end.value) { ElMessage.warning('开始时间必须早于结束时间'); return }
+  if (new Date(`${date.value}T${start.value}:00`).getTime() <= Date.now()) {
+    ElMessage.warning('预约开始时间需晚于当前时间'); return
   }
-  const startAt = new Date(`${date.value}T${start.value}:00`)
-  if (startAt.getTime() <= Date.now()) {
-    ElMessage.warning('预约开始时间需晚于当前时间')
-    return
+  try {
+    const res = await holdApi.hold({ roomId: Number(roomId), seatId: cell.seatId, date: date.value, startTime: start.value, endTime: end.value })
+    picked.value = cell
+    pickedExpireAt.value = res.expireAt
+    confirmed.value = false
+    dialog.value = true
+  } catch (e) {
+    await reload() // 已被他人锁/占用
   }
-  picked.value = cell
-  dialog.value = true
 }
 
 async function submit() {
@@ -109,12 +130,24 @@ async function submit() {
       date: date.value, startTime: start.value, endTime: end.value
     })
     ElMessage.success('预约成功！座位已锁定，请按时签到')
+    confirmed.value = true
     dialog.value = false
     await reload()
   } catch (e) {
-    await reload() // 并发失败时刷新座位
+    await reload()
   } finally {
     submitting.value = false
+  }
+}
+
+// 关闭对话框但未确认 → 释放临时锁
+function onDialogClose() {
+  if (!confirmed.value) releaseCurrent()
+}
+function releaseCurrent() {
+  if (picked.value && !confirmed.value) {
+    holdApi.release({ roomId: Number(roomId), seatId: picked.value.seatId, date: date.value }).catch(() => {})
+    picked.value = null
   }
 }
 </script>

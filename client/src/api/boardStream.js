@@ -20,7 +20,7 @@ export function connectBoardStream({ roomId, date }, handlers = {}) {
         }
       })
     }
-    ;['board_snapshot', 'seat_reserved', 'seat_released', 'seat_in_use', 'seat_disabled', 'heartbeat'].forEach(bind)
+    ;['board_snapshot', 'seat_reserved', 'seat_released', 'seat_in_use', 'seat_disabled', 'seat_hold', 'hold_released', 'heartbeat'].forEach(bind)
 
     es.onopen = () => { handlers.onOpen && handlers.onOpen() }
     es.onerror = () => {

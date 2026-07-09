@@ -23,4 +23,6 @@ public class SeatwiseProps {
     private int dailyLimit = 3;
     /** 单次预约最大时间片数 */
     private int maxSlotsPerReservation = 8;
+    /** 临时锁座保留秒数 */
+    private int holdSeconds = 90;
 }

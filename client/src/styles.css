@@ -39,7 +39,10 @@ body {
 .seat-RESERVED { background: #fff2dd; color: #d98a00; border: 1px solid #ffd699; }
 .seat-USING { background: #ffe1e1; color: #d64545; border: 1px solid #ffb3b3; }
 .seat-DISABLED { background: #e9ecf2; color: #a2abbd; border: 1px solid #d5dae4; }
+.seat-HELD { background: #fff7d6; color: #b8860b; border: 1px solid #ffe08a; animation: holdpulse 1.2s ease-in-out infinite; }
 .seat-mine { outline: 3px solid #3b6cff; outline-offset: 1px; }
+.seat-mine-hold { outline: 3px solid #8f5bff; outline-offset: 1px; }
+@keyframes holdpulse { 0%,100% { box-shadow: 0 0 0 0 rgba(216,138,0,.35); } 50% { box-shadow: 0 0 0 4px rgba(216,138,0,0); } }
 .seat-AISLE, .seat-EMPTY { background: transparent; color: #c2c9d6; }
 .seat-selected { outline: 3px solid #8f5bff; outline-offset: 1px; }
 

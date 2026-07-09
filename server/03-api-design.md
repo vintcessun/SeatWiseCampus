@@ -20,6 +20,7 @@
 | `AUTH_REQUIRED` | 401 | 未登录 |
 | `PERMISSION_DENIED` | 403 | 无权限 |
 | `SEAT_ALREADY_RESERVED` | 409 | 座位/时间片已占 |
+| `SEAT_ALREADY_HELD` | 409 | 座位正被他人临时选择中 |
 | `RESERVATION_TIME_CONFLICT` | 409 | 用户自身时段冲突 |
 | `DAILY_LIMIT_EXCEEDED` | 400 | 超单日次数 |
 | `USER_IN_BLACKLIST` | 403 | 黑名单 |
@@ -83,6 +84,12 @@
 ```json
 { "code":0,"data":{ "roomId":10,"date":"2026-07-06","seats":[{"seatId":101,"seatNo":"A-01","status":"FREE","mine":false}] } }
 ```
+
+### 3.5-0 临时锁座（分布式实时特色，详见 server/15）
+| 方法 | URL | 权限 | 说明 |
+| --- | --- | --- | --- |
+| POST | `/api/holds` | STUDENT | 点座临时保留（Redis TTL 90s），返回 `{expireAt,holdSeconds}` |
+| POST | `/api/holds/release` | STUDENT | 释放本人锁 |
 
 ### 3.5 预约 / 签到 / 签退 / 取消
 | 方法 | URL | 权限 | 说明 |

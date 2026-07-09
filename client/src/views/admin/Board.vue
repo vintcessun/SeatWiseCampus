@@ -22,7 +22,7 @@
     <el-row :gutter="16">
       <el-col :span="18">
         <el-card shadow="never">
-          <SeatGrid :cells="board.seats || []" :cols="board.cols || 8" />
+          <SeatGrid :cells="board.seats || []" :cols="board.cols || 8" :now-ms="nowMs" />
         </el-card>
       </el-col>
       <el-col :span="6">
@@ -55,7 +55,9 @@ const start = ref('14:00')
 const end = ref('16:00')
 const board = reactive({ seats: [], cols: 8, roomName: '' })
 const sseOk = ref(false)
+const nowMs = ref(Date.now())
 let stream = null
+let ticker = null
 
 const counts = computed(() => {
   const c = { FREE: 0, RESERVED: 0, USING: 0, DISABLED: 0 }
@@ -63,8 +65,8 @@ const counts = computed(() => {
   return c
 })
 
-onMounted(() => { reload(); openStream() })
-onBeforeUnmount(() => { if (stream) stream.close() })
+onMounted(() => { reload(); openStream(); ticker = setInterval(() => nowMs.value = Date.now(), 1000) })
+onBeforeUnmount(() => { if (stream) stream.close(); if (ticker) clearInterval(ticker) })
 
 async function reload() {
   Object.assign(board, await boardApi.snapshot(roomId, { date: date.value, start: start.value, end: end.value }))
@@ -74,14 +76,16 @@ function openStream() {
   stream = connectBoardStream({ roomId, date: date.value }, {
     onOpen: () => (sseOk.value = true),
     onError: () => (sseOk.value = false),
-    seat_reserved: (p) => apply(p, 'RESERVED'),
-    seat_released: (p) => apply(p, 'FREE'),
-    seat_in_use: (p) => apply(p, 'USING'),
-    seat_disabled: (p) => apply(p, 'DISABLED')
+    seat_reserved: (p) => set(p.seatId, { status: 'RESERVED', holdExpireAt: null }),
+    seat_released: (p) => set(p.seatId, { status: 'FREE', holdExpireAt: null }),
+    seat_in_use: (p) => set(p.seatId, { status: 'USING' }),
+    seat_disabled: (p) => set(p.seatId, { status: 'DISABLED' }),
+    seat_hold: (p) => set(p.seatId, { status: 'HELD', holdExpireAt: p.expireAt }),
+    hold_released: (p) => set(p.seatId, { status: 'FREE', holdExpireAt: null })
   })
 }
-function apply(p, status) {
-  const s = (board.seats || []).find(x => x.seatId === p.seatId)
-  if (s) s.status = status
+function set(seatId, patch) {
+  const s = (board.seats || []).find(x => x.seatId === seatId)
+  if (s) Object.assign(s, patch)
 }
 </script>

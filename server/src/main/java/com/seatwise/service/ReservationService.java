@@ -128,7 +128,8 @@ public class ReservationService {
             } catch (DuplicateKeyException e) {
                 throw new BizException(BizError.SEAT_ALREADY_RESERVED);
             }
-            // 15. SSE 推送
+            // 清理临时锁座 + SSE 推送
+            redisson.getBucket(BoardService.holdKey(roomId, date, seatId)).delete();
             broadcastSeat(roomId, date, seatId, "RESERVED", "seat_reserved");
             return toVO(reservation);
         } finally {
