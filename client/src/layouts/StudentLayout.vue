@@ -6,6 +6,7 @@
       </div>
       <el-menu :default-active="active" router background-color="#1f2740" text-color="#c7cfe2"
                active-text-color="#fff">
+        <el-menu-item index="/student/home"><el-icon><HomeFilled /></el-icon><span>首页概览</span></el-menu-item>
         <el-menu-item index="/student/rooms"><el-icon><Search /></el-icon><span>选座预约</span></el-menu-item>
         <el-menu-item index="/student/reservations"><el-icon><Tickets /></el-icon><span>我的预约</span></el-menu-item>
         <el-menu-item index="/student/nearby"><el-icon><LocationInformation /></el-icon><span>附近空位</span></el-menu-item>

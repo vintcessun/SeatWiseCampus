@@ -9,7 +9,8 @@ const routes = [
     component: () => import('../layouts/StudentLayout.vue'),
     meta: { role: 'STUDENT' },
     children: [
-      { path: '', redirect: '/student/rooms' },
+      { path: '', redirect: '/student/home' },
+      { path: 'home', component: () => import('../views/student/Home.vue') },
       { path: 'rooms', component: () => import('../views/student/Rooms.vue') },
       { path: 'rooms/:roomId/seats', component: () => import('../views/student/Seats.vue') },
       { path: 'reservations', component: () => import('../views/student/Reservations.vue') },
