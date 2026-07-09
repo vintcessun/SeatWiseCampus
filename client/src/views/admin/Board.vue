@@ -8,7 +8,10 @@
           多客户端座位状态秒级同步
         </div>
       </div>
-      <el-button @click="$router.back()">返回</el-button>
+      <div style="display:flex;gap:8px">
+        <el-button type="primary" plain :icon="VideoPlay" @click="$router.push(`/admin/rooms/${roomId}/replay`)">历史回放</el-button>
+        <el-button @click="$router.back()">返回</el-button>
+      </div>
     </div>
 
     <el-card shadow="never" style="margin-bottom:16px">
@@ -57,6 +60,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
+import { VideoPlay } from '@element-plus/icons-vue'
 import SeatGrid from '../../components/SeatGrid.vue'
 import { boardApi } from '../../api'
 import { connectBoardStream } from '../../api/boardStream'

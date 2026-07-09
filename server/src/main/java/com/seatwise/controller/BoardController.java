@@ -7,6 +7,7 @@ import com.seatwise.config.SeatwiseProps;
 import com.seatwise.service.BoardService;
 import com.seatwise.sse.SseManager;
 import com.seatwise.vo.BoardVO;
+import com.seatwise.vo.ReplayVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
@@ -34,6 +35,13 @@ public class BoardController {
         int endSlot = end != null ? SlotUtil.toSlot(end, slotMin) : 48;
         Long uid = currentUserOrNull();
         return R.ok(boardService.buildBoard(id, date, startSlot, endSlot, uid));
+    }
+
+    /** 历史回放：按时间片重建当天座位占用轨迹 */
+    @GetMapping("/study-rooms/{id}/replay")
+    public R<ReplayVO> replay(@PathVariable Long id,
+                              @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date) {
+        return R.ok(boardService.buildReplay(id, date));
     }
 
     /**

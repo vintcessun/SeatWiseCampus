@@ -25,7 +25,8 @@ export const adminApi = {
 }
 
 export const boardApi = {
-  snapshot: (roomId, params) => http.get(`/study-rooms/${roomId}/board`, { params })
+  snapshot: (roomId, params) => http.get(`/study-rooms/${roomId}/board`, { params }),
+  replay: (roomId, date) => http.get(`/study-rooms/${roomId}/replay`, { params: { date } })
 }
 
 export const holdApi = {

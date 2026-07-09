@@ -29,6 +29,7 @@ const routes = [
       { path: 'rooms', component: () => import('../views/admin/Rooms.vue') },
       { path: 'rooms/:roomId/layout', component: () => import('../views/admin/LayoutEditor.vue') },
       { path: 'rooms/:roomId/board', component: () => import('../views/admin/Board.vue') },
+      { path: 'rooms/:roomId/replay', component: () => import('../views/admin/Replay.vue') },
       { path: 'students', component: () => import('../views/admin/StudentTracking.vue') },
       { path: 'reports', component: () => import('../views/admin/Reports.vue') },
       { path: 'blacklist', component: () => import('../views/admin/Blacklist.vue') }

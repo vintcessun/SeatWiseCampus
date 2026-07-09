@@ -15,7 +15,7 @@ flowchart LR
     N[① 通知中心+每用户SSE] --> E[② 管理端实时事件流]
     E --> C[③ 冲突后智能替代方案]
     C --> D[④ 首页数据概览Dashboard]
-    D --> W[⑤ 候补队列 ✅] --> G[⑥ 组队相邻预约 ✅] --> H[⑦ 历史回放]
+    D --> W[⑤ 候补队列 ✅] --> G[⑥ 组队相邻预约 ✅] --> H[⑦ 历史回放 ✅]
 ```
 
 ## ① 站内通知中心 + 每用户 SSE（✅ 已实现 2026-07-09）
@@ -48,8 +48,12 @@ flowchart LR
 - 落地：`GroupReservationDTO`；`ReservationService.createGroup/ensureAdjacent`；前端 Seats 页「组队相邻预约」开关+成员分配+网格多选高亮。
 - 测试 `scripts/test-group.mjs` 7/7：含**并发两组抢重叠相邻座位，恰好一组整体成功、败组原子回滚**。
 
-## ⑦ 历史回放（后续，大）
-- 保存关键座位状态事件，管理端拖动播放条重建历史，回答"哪个时刻最拥挤"。
+## ⑦ 历史回放（✅ 已实现 2026-07-09）
+- 管理端拖动播放条/自动播放，重建当天座位占用轨迹；利用率仪表盘 + 全天占用曲线（sparkline）一眼定位「最拥挤时刻」。
+- **无需事件表**：直接以 `reservation`（待签到/使用中/已完成）为真源，`BoardService.buildReplay` 按时间片重建每帧占用集合；回放范围取自习室开放时段。
+- 接口 `GET /api/study-rooms/{id}/replay?date=`；`ReplayVO{seats, timeline[{slotIndex,label,occupied[],occupiedCount}]}`。
+- 前端 `views/admin/Replay.vue`（复用 SeatGrid + el-slider + el-segmented 倍速 + 仪表盘 + 曲线），入口在实时看板页「历史回放」按钮。
+- 测试 `scripts/test-replay.mjs` 7/7；演示数据 `scripts/seed-replay.mjs` 生成起伏曲线。
 
 ## 实现约束
 - 每用户 SSE 与看板 SSE 分离；通知只做站内，不接真实短信/推送通道。

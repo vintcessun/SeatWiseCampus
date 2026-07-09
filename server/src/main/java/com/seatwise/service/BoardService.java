@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.seatwise.config.SeatwiseProps;
 import com.seatwise.entity.*;
 import com.seatwise.mapper.*;
+import com.seatwise.common.SlotUtil;
 import com.seatwise.vo.BoardVO;
+import com.seatwise.vo.ReplayVO;
 import com.seatwise.vo.SeatStatusVO;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RBucket;
@@ -116,5 +118,68 @@ public class BoardService {
 
     public SeatwiseProps getProps() {
         return props;
+    }
+
+    /**
+     * 历史回放：由当天已落地的预约（待签到/使用中/已完成）按时间片重建每一帧的座位占用。
+     * 不新增事件表，直接以 reservation 为真源。
+     */
+    public ReplayVO buildReplay(Long roomId, LocalDate date) {
+        int slotMin = props.getSlotMinutes();
+        StudyRoom room = studyRoomMapper.selectById(roomId);
+        List<Seat> seats = seatMapper.selectList(new LambdaQueryWrapper<Seat>()
+                .eq(Seat::getRoomId, roomId)
+                .orderByAsc(Seat::getRowIndex).orderByAsc(Seat::getColIndex));
+
+        List<Reservation> booked = reservationMapper.selectList(new LambdaQueryWrapper<Reservation>()
+                .eq(Reservation::getRoomId, roomId)
+                .eq(Reservation::getDate, date)
+                .in(Reservation::getStatus, List.of("PENDING_SIGN_IN", "IN_USE", "COMPLETED")));
+
+        int rows = 0, cols = 0, totalSeats = 0;
+        List<ReplayVO.SeatMeta> metas = new ArrayList<>();
+        for (Seat seat : seats) {
+            rows = Math.max(rows, seat.getRowIndex() + 1);
+            cols = Math.max(cols, seat.getColIndex() + 1);
+            if ("SEAT".equals(seat.getCellType()) && seat.getEnabled() != null && seat.getEnabled() == 1) totalSeats++;
+            ReplayVO.SeatMeta m = new ReplayVO.SeatMeta();
+            m.setSeatId(seat.getId());
+            m.setSeatNo(seat.getSeatNo());
+            m.setRowIndex(seat.getRowIndex());
+            m.setColIndex(seat.getColIndex());
+            m.setCellType(seat.getCellType());
+            m.setEnabled(seat.getEnabled());
+            metas.add(m);
+        }
+
+        // 回放范围：优先自习室开放时段，否则 08:00-22:00
+        int fromSlot = room != null && room.getOpenStart() != null
+                ? SlotUtil.toSlot(room.getOpenStart(), slotMin) : (8 * 60) / slotMin;
+        int toSlot = room != null && room.getOpenEnd() != null
+                ? SlotUtil.toSlot(room.getOpenEnd(), slotMin) : (22 * 60) / slotMin;
+
+        List<ReplayVO.Frame> timeline = new ArrayList<>();
+        for (int slot = fromSlot; slot < toSlot; slot++) {
+            List<Long> occ = new ArrayList<>();
+            for (Reservation r : booked)
+                if (r.getStartSlot() <= slot && slot < r.getEndSlot()) occ.add(r.getSeatId());
+            ReplayVO.Frame f = new ReplayVO.Frame();
+            f.setSlotIndex(slot);
+            f.setLabel(SlotUtil.label(slot, slotMin));
+            f.setOccupied(occ);
+            f.setOccupiedCount(occ.size());
+            timeline.add(f);
+        }
+
+        ReplayVO vo = new ReplayVO();
+        vo.setRoomId(roomId);
+        vo.setRoomName(room != null ? room.getName() : "");
+        vo.setDate(date);
+        vo.setRows(rows);
+        vo.setCols(cols);
+        vo.setTotalSeats(totalSeats);
+        vo.setSeats(metas);
+        vo.setTimeline(timeline);
+        return vo;
     }
 }
