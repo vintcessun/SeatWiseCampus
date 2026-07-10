@@ -60,7 +60,7 @@ async function submit() {
   try {
     const data = await user.login({ ...form })
     ElMessage.success('登录成功')
-    router.push(data.role === 'ADMIN' ? '/admin' : '/student')
+    router.push((data.role === 'ADMIN' || data.role === 'ADMIN_SUB') ? '/admin' : '/student')
   } catch (e) {
     // 错误已由拦截器提示
   } finally {

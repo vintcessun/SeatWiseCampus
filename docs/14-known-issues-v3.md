@@ -17,7 +17,7 @@
 | R3 删除自习室 + 楼栋固定 | P1 | ✅ | 楼栋下拉动态读取；新增「删除自习室」（校验未来预约）+「新增楼栋」入口 |
 | R4 缺少临时关闭自习室功能 | P1 | ✅ | 自习室「临时关闭/重新开放」；关闭后拒绝新预约（ROOM_CLOSED）并联动通知 |
 | R5 排布仅支持单过道 | P1 | ✅ | 排布编辑器「手动编辑模式」：画笔逐格 SEAT/AISLE/EMPTY/DISABLED，+行/+列，保存自动编号 |
-| R6 缺少子管理员账号 | P3 | ⏳ | 扩展功能，需新增 ADMIN_SUB 角色 |
+| R6 缺少子管理员账号 | P3 | ✅ | 新增 ADMIN_SUB 角色 + 「管理员管理」页；主管理员(SUPER)可创建/删除子管理员，子管理员可管理自习室/报表但不能管理管理员 |
 | R7 管理端缺时空座位图 + 选座结合 | P2 | ✅ | 管理端「时空占用图」（复用只读）；学生端时长选择→带起止一步跳转预约 |
 | R8 缺少预约须知/规则提示 | P2 | ✅ | 选座页「预约须知」气泡：签到窗口/扣分/黑名单/次数上限说明 |
 | R9 通知类型均显示 announcement | P2 | ✅ | 补全前端 typeMap（SCORE/BLACKLIST/WAITLIST/GROUP/ANNOUNCEMENT/REMINDER）+ 图标 |
@@ -25,9 +25,9 @@
 | R11 附近空位需定位 + 位置管理 | P3 | ✅ | 管理端「位置管理」维护楼栋经纬度；学生端「定位我的位置」用浏览器 Geolocation + Haversine 就近选楼栋 |
 | R12 番茄钟（原「苹果钟」）| P3 | ✅ | 学生端「专注番茄钟」：25/5/15 循环、环形倒计时、完成彩带+提示音、当日统计 |
 
-> **本轮修复（2026-07-10）**：R1/R2/R3/R4/R5/R7/R8/R9/R10/R11/R12 已完成；仅 R6（子管理员）待做。
-> 后端测试 `scripts/test-room-mgmt.mjs` 10/10、`test-fixes` 15/15（含验证码 CAPTCHA_INVALID）；删除自习室/新增楼栋/坐标校验通过。
-> 关联设计：`server/03`（新增 `GET /api/captcha`、`PUT /api/buildings/{id}/location`、`POST /api/study-rooms/{id}/status`、`DELETE /api/study-rooms/{id}`；错误码 `CAPTCHA_INVALID`/`ROOM_CLOSED`/`SEAT_HAS_FUTURE_RESERVATION`/`ROOM_HAS_FUTURE_RESERVATION`）。
+> **全部完成（2026-07-10）**：R1–R12 **12 项已全部落地** ✅。本文件可归档。
+> 后端测试：`test-room-mgmt` 10/10、`test-subadmin` 10/10、`test-fixes` 15/15（含验证码）；删除自习室/新增楼栋/坐标校验均通过。
+> 关联设计：`server/03`（新增 `GET /api/captcha`、`PUT /api/buildings/{id}/location`、`POST /api/study-rooms/{id}/status`、`DELETE /api/study-rooms/{id}`、`/api/admin/admins` CRUD；角色 `ADMIN_SUB`/`SUPER`；错误码 `CAPTCHA_INVALID`/`ROOM_CLOSED`/`SEAT_HAS_FUTURE_RESERVATION`/`ROOM_HAS_FUTURE_RESERVATION`）。
 
 ---
 

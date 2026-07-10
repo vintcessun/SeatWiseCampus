@@ -29,6 +29,10 @@ public class StpInterfaceImpl implements StpInterface {
         if (user == null) {
             return Collections.emptyList();
         }
-        return List.of(user.getRole());
+        String role = user.getRole();
+        // 主管理员额外拥有 SUPER（可管理其他管理员）；子管理员拥有 ADMIN 以复用常规管理端能力
+        if ("ADMIN".equals(role)) return List.of("ADMIN", "SUPER");
+        if ("ADMIN_SUB".equals(role)) return List.of("ADMIN_SUB", "ADMIN");
+        return List.of(role);
     }
 }

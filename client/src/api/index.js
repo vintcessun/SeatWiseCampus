@@ -28,6 +28,12 @@ export const adminApi = {
   reservations: (params) => http.get('/admin/reservations', { params })
 }
 
+export const adminUsersApi = {
+  list: () => http.get('/admin/admins'),
+  create: (data) => http.post('/admin/admins', data),
+  remove: (id) => http.delete(`/admin/admins/${id}`)
+}
+
 export const boardApi = {
   snapshot: (roomId, params) => http.get(`/study-rooms/${roomId}/board`, { params }),
   replay: (roomId, date) => http.get(`/study-rooms/${roomId}/replay`, { params: { date } })

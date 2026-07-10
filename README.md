@@ -118,6 +118,7 @@ node scripts/test-announcement.mjs # 公告中心 9 项
 node scripts/test-report-me.mjs # 个人自习报告 8 项
 node scripts/test-reminder.mjs  # 预约提醒（含幂等）5 项
 node scripts/test-room-mgmt.mjs # 自习室临时关闭/座位排布未来预约校验 10 项
+node scripts/test-subadmin.mjs  # 子管理员权限（ADMIN_SUB/SUPER）10 项
 ```
 
 > 部分脚本会写入数据，建议在干净库上单独运行；重置：`docker compose down -v && docker compose up -d`。

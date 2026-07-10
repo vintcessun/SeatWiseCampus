@@ -38,7 +38,8 @@ const routes = [
       { path: 'reports', component: () => import('../views/admin/Reports.vue') },
       { path: 'announcements', component: () => import('../views/admin/Announcements.vue') },
       { path: 'locations', component: () => import('../views/admin/Locations.vue') },
-      { path: 'blacklist', component: () => import('../views/admin/Blacklist.vue') }
+      { path: 'blacklist', component: () => import('../views/admin/Blacklist.vue') },
+      { path: 'admins', component: () => import('../views/admin/Admins.vue') }
     ]
   }
 ]
@@ -51,11 +52,11 @@ const router = createRouter({
 router.beforeEach((to) => {
   const token = localStorage.getItem('satoken')
   const role = localStorage.getItem('role')
+  const isAdmin = role === 'ADMIN' || role === 'ADMIN_SUB'
   if (to.meta.public) return true
   if (!token) return '/login'
-  if (to.meta.role && to.meta.role !== role) {
-    return role === 'ADMIN' ? '/admin' : '/student'
-  }
+  if (to.meta.role === 'ADMIN' && !isAdmin) return '/student'
+  if (to.meta.role === 'STUDENT' && isAdmin) return '/admin'
   return true
 })
 

@@ -14,6 +14,7 @@
         <el-menu-item index="/admin/announcements"><el-icon><Bell /></el-icon><span>公告管理</span></el-menu-item>
         <el-menu-item index="/admin/locations"><el-icon><MapLocation /></el-icon><span>位置管理</span></el-menu-item>
         <el-menu-item index="/admin/blacklist"><el-icon><Warning /></el-icon><span>黑名单管理</span></el-menu-item>
+        <el-menu-item v-if="isPrimary" index="/admin/admins"><el-icon><UserFilled /></el-icon><span>管理员管理</span></el-menu-item>
       </el-menu>
     </el-aside>
     <el-container>
@@ -23,7 +24,7 @@
           <el-tooltip :content="theme === 'dark' ? '切换到明亮模式' : '切换到深色模式'" placement="bottom">
             <el-button circle :icon="theme === 'dark' ? Sunny : Moon" @click="toggleTheme" />
           </el-tooltip>
-          <span>{{ user.userInfo?.realName }}（管理员）</span>
+          <span>{{ user.userInfo?.realName }}（{{ isPrimary ? '主管理员' : '子管理员' }}）</span>
           <el-button link type="primary" @click="logout">退出</el-button>
         </div>
       </el-header>
@@ -49,6 +50,7 @@ const route = useRoute()
 const router = useRouter()
 const user = useUserStore()
 const active = computed(() => '/admin/' + (route.path.split('/')[2] || 'rooms'))
+const isPrimary = computed(() => (user.role || user.userInfo?.role) === 'ADMIN')
 
 function logout() {
   user.logout()
