@@ -14,7 +14,7 @@
 | 层 | 文件 | 作用 |
 | --- | --- | --- |
 | 入口/Agent | README、AGENTS、CLAUDE、llms.txt、PROJECT_CONTEXT、ROADMAP、GLOSSARY | 项目入口、规则、索引、上下文 |
-| 通用设计 | docs/00–09 | 需求、架构、流程、MVP、扩展、演示、验收、已知问题 V1、已知问题 V2 |
+| 通用设计 | docs/00–14 | 需求、架构、流程、MVP、扩展、演示、验收、已知问题 V1–V3 |
 | 前端实现 | client/00–10 + client/README + client/AGENTS | 前端设计与实现 |
 | 后端实现 | server/00–13 + server/README + server/AGENTS | 后端设计与实现 |
 
