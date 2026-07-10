@@ -145,6 +145,17 @@ public class BaseDataService {
         seatMapper.updateById(s);
     }
 
+    /** R11：更新楼栋经纬度（校园内合法范围校验） */
+    public void updateBuildingLocation(Long buildingId, Double lat, Double lng) {
+        Building b = buildingMapper.selectById(buildingId);
+        if (b == null) throw new BizException(BizError.BAD_REQUEST, "楼栋不存在");
+        if (lat == null || lng == null || lat < -90 || lat > 90 || lng < -180 || lng > 180)
+            throw new BizException(BizError.BAD_REQUEST, "经纬度不合法");
+        b.setLatitude(java.math.BigDecimal.valueOf(lat));
+        b.setLongitude(java.math.BigDecimal.valueOf(lng));
+        buildingMapper.updateById(b);
+    }
+
     /** R3：删除自习室（连带座位）。存在未来预约时拒绝。 */
     @Transactional
     public void deleteRoom(Long roomId) {

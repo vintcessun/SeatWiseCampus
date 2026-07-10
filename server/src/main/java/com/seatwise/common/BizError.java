@@ -18,6 +18,7 @@ public enum BizError {
     ROOM_CLOSED(400, "自习室已关闭，暂不可预约"),
     SEAT_HAS_FUTURE_RESERVATION(409, "该座位存在未来预约，不能停用/修改"),
     ROOM_HAS_FUTURE_RESERVATION(409, "该自习室存在未来预约，不能重排座位"),
+    CAPTCHA_INVALID(400, "验证码错误或已过期"),
     RESERVATION_NOT_FOUND(404, "预约不存在"),
     INVALID_TIME_RANGE(400, "预约时间不合法"),
     SCORE_RULE_NOT_FOUND(400, "积分规则缺失"),

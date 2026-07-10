@@ -17,7 +17,8 @@ const pad = x => String(Math.floor(x / 60) % 24).padStart(2, '0') + ':' + String
   const date = today()
   // 注册一个全新学生，避免受既有预约/每日上限污染
   const uname = 'replaytest_' + Date.now().toString().slice(-8)
-  const reg = await api('/auth/register', { method: 'POST', body: { username: uname, password: '123456', realName: '回放测试' } })
+  const cap = (await api('/captcha')).data
+  const reg = await api('/auth/register', { method: 'POST', body: { username: uname, password: '123456', realName: '回放测试', captchaId: cap.captchaId, captchaCode: cap.code } })
   const stu = reg.data?.token || await login(uname, '123456')
   const admin = await login('admin', 'admin123')
   const roomId = (await api(`/study-rooms?campusId=${(await api('/campuses', { token: stu })).data[0].id}`, { token: stu })).data[0].id

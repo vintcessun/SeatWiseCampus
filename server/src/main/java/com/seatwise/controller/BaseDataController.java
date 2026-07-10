@@ -65,6 +65,15 @@ public class BaseDataController {
     }
 
     @SaCheckRole("ADMIN")
+    @PutMapping("/buildings/{id}/location")
+    public R<Void> updateBuildingLocation(@PathVariable Long id,
+                                          @RequestParam Double latitude,
+                                          @RequestParam Double longitude) {
+        baseDataService.updateBuildingLocation(id, latitude, longitude);
+        return R.ok();
+    }
+
+    @SaCheckRole("ADMIN")
     @DeleteMapping("/study-rooms/{id}")
     public R<Void> deleteRoom(@PathVariable Long id) {
         baseDataService.deleteRoom(id);

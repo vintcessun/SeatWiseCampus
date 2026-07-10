@@ -12,6 +12,7 @@
         <el-time-select v-model="start" start="08:00" end="21:30" step="00:30" style="width:120px" />
         <el-time-select v-model="end" start="08:30" end="22:00" step="00:30" style="width:120px" />
         <el-button type="primary" :icon="LocationInformation" @click="search">推荐</el-button>
+        <el-button :icon="Position" :loading="locating" @click="locateMe">定位我的位置</el-button>
       </div>
     </el-card>
 
@@ -36,7 +37,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { LocationInformation } from '@element-plus/icons-vue'
+import { LocationInformation, Position } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 import { baseApi, nearbyApi } from '../../api'
 import { todayLocal } from '../../utils/date'
 
@@ -48,6 +50,36 @@ const start = ref('14:00')
 const end = ref('16:00')
 const list = ref([])
 const searched = ref(false)
+const locating = ref(false)
+
+// 浏览器定位 → 就近选择楼栋（Haversine）
+function haversine(lat1, lng1, lat2, lng2) {
+  const R = 6371000, toRad = d => d * Math.PI / 180
+  const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1)
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2
+  return 2 * R * Math.asin(Math.sqrt(a))
+}
+function locateMe() {
+  if (!navigator.geolocation) { ElMessage.warning('浏览器不支持定位，请手动选择楼栋'); return }
+  locating.value = true
+  navigator.geolocation.getCurrentPosition(pos => {
+    const { latitude, longitude } = pos.coords
+    const withGeo = buildings.value.filter(b => b.latitude != null && b.longitude != null)
+    if (!withGeo.length) { ElMessage.warning('楼栋暂无坐标，请联系管理员在「位置管理」维护'); locating.value = false; return }
+    let best = null, bestD = Infinity
+    for (const b of withGeo) {
+      const d = haversine(latitude, longitude, Number(b.latitude), Number(b.longitude))
+      if (d < bestD) { bestD = d; best = b }
+    }
+    buildingId.value = best.id
+    ElMessage.success(`已定位到最近楼栋：${best.name}（约 ${Math.round(bestD)} m）`)
+    locating.value = false
+    search()
+  }, err => {
+    ElMessage.warning('定位失败或被拒绝，请手动选择楼栋')
+    locating.value = false
+  }, { enableHighAccuracy: true, timeout: 8000 })
+}
 
 onMounted(async () => {
   const campuses = await baseApi.campuses()

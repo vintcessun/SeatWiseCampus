@@ -12,6 +12,7 @@
         <el-menu-item index="/admin/students"><el-icon><User /></el-icon><span>学生预约追踪</span></el-menu-item>
         <el-menu-item index="/admin/reports"><el-icon><DataAnalysis /></el-icon><span>数据报表</span></el-menu-item>
         <el-menu-item index="/admin/announcements"><el-icon><Bell /></el-icon><span>公告管理</span></el-menu-item>
+        <el-menu-item index="/admin/locations"><el-icon><MapLocation /></el-icon><span>位置管理</span></el-menu-item>
         <el-menu-item index="/admin/blacklist"><el-icon><Warning /></el-icon><span>黑名单管理</span></el-menu-item>
       </el-menu>
     </el-aside>

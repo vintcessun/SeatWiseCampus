@@ -17,7 +17,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms))
   const date = today()
   // 全新用户，避免历史提醒干扰
   const uname = 'remindtest_' + Date.now().toString().slice(-8)
-  const reg = await api('/auth/register', { method: 'POST', body: { username: uname, password: '123456', realName: '提醒测试' } })
+  const cap = (await api('/captcha')).data
+  const reg = await api('/auth/register', { method: 'POST', body: { username: uname, password: '123456', realName: '提醒测试', captchaId: cap.captchaId, captchaCode: cap.code } })
   const token = reg.data?.token
   ok('注册测试用户', !!token)
 

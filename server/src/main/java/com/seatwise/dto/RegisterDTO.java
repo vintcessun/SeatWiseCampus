@@ -14,4 +14,6 @@ public class RegisterDTO {
     private String password;
     @NotBlank(message = "请输入姓名")
     private String realName;
+    private String captchaId;
+    private String captchaCode;
 }

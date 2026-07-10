@@ -4,7 +4,8 @@ export const authApi = {
   login: (data) => http.post('/auth/login', data),
   register: (data) => http.post('/auth/register', data),
   logout: () => http.post('/auth/logout'),
-  me: () => http.get('/users/me')
+  me: () => http.get('/users/me'),
+  captcha: () => http.get('/captcha')
 }
 
 export const baseApi = {
@@ -17,6 +18,7 @@ export const baseApi = {
   generateLayout: (roomId, params) => http.post(`/study-rooms/${roomId}/generate-layout`, null, { params }),
   createCampus: (data) => http.post('/campuses', data),
   createBuilding: (data) => http.post('/buildings', data),
+  updateBuildingLocation: (id, latitude, longitude) => http.put(`/buildings/${id}/location`, null, { params: { latitude, longitude } }),
   createRoom: (data) => http.post('/study-rooms', data),
   deleteRoom: (roomId) => http.delete(`/study-rooms/${roomId}`),
   setRoomStatus: (roomId, status) => http.post(`/study-rooms/${roomId}/status`, null, { params: { status } })

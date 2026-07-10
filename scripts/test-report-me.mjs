@@ -41,7 +41,8 @@ const login = async (u, p) => (await api('/auth/login', { method: 'POST', body: 
 
   // 精确口径：新注册用户报告应全 0 且守约率 100
   const uname = 'reportzero_' + Date.now().toString().slice(-8)
-  const reg = await api('/auth/register', { method: 'POST', body: { username: uname, password: '123456', realName: '零报告' } })
+  const cap = (await api('/captcha')).data
+  const reg = await api('/auth/register', { method: 'POST', body: { username: uname, password: '123456', realName: '零报告', captchaId: cap.captchaId, captchaCode: cap.code } })
   const fresh = reg.data?.token
   const zr = (await api('/me/study-report', { token: fresh })).data
   ok('新用户完成场次为 0', zr.completedSessions === 0)

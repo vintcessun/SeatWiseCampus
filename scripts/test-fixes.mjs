@@ -21,9 +21,14 @@ async function main() {
 
   console.log('[2] 注册 + 自动登录')
   const uname = 'newstu_' + Date.now().toString().slice(-6)
-  const reg = await api('/api/auth/register', { method: 'POST', body: { username: uname, password: 'abc123', realName: '新同学' } })
+  const cap1 = (await api('/api/captcha')).data
+  const reg = await api('/api/auth/register', { method: 'POST', body: { username: uname, password: 'abc123', realName: '新同学', captchaId: cap1.captchaId, captchaCode: cap1.code } })
   ok('注册成功并返回登录态', reg.code === '0' && !!reg.data?.token, 'role=' + reg.data?.role)
-  const dup = await api('/api/auth/register', { method: 'POST', body: { username: uname, password: 'abc123', realName: 'X' } })
+  const capBad = (await api('/api/captcha')).data
+  const wrong = await api('/api/auth/register', { method: 'POST', body: { username: 'x_' + uname, password: 'abc123', realName: 'X', captchaId: capBad.captchaId, captchaCode: 'ZZZZ' } })
+  ok('验证码错误被拒（R1）', wrong.code === 'CAPTCHA_INVALID', JSON.stringify(wrong).slice(0, 80))
+  const cap2 = (await api('/api/captcha')).data
+  const dup = await api('/api/auth/register', { method: 'POST', body: { username: uname, password: 'abc123', realName: 'X', captchaId: cap2.captchaId, captchaCode: cap2.code } })
   ok('重复用户名被拒', dup.code === 'USERNAME_EXISTS')
   const relogin = await login(uname, 'abc123')
   ok('新账号可用新密码登录（bcrypt）', relogin.code === '0')

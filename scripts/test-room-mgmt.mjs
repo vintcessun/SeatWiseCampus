@@ -16,7 +16,8 @@ function tomorrow() { const d = new Date(); d.setDate(d.getDate() + 1); return `
   const admin = await login('admin', 'admin123')
   const date = tomorrow()
   const uname = 'roomtest_' + Date.now().toString().slice(-8)
-  const reg = await api('/auth/register', { method: 'POST', body: { username: uname, password: '123456', realName: '房管测试' } })
+  const cap = (await api('/captcha')).data
+  const reg = await api('/auth/register', { method: 'POST', body: { username: uname, password: '123456', realName: '房管测试', captchaId: cap.captchaId, captchaCode: cap.code } })
   const stu = reg.data.token
 
   const roomId = (await api('/study-rooms?campusId=1', { token: stu })).data[0].id

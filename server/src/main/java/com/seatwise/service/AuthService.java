@@ -20,6 +20,7 @@ public class AuthService {
 
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final CaptchaService captchaService;
 
     public LoginVO login(LoginDTO dto) {
         User user = userMapper.selectOne(new LambdaQueryWrapper<User>()
@@ -38,6 +39,9 @@ public class AuthService {
     }
 
     public LoginVO register(RegisterDTO dto) {
+        if (!captchaService.validate(dto.getCaptchaId(), dto.getCaptchaCode())) {
+            throw new BizException(BizError.CAPTCHA_INVALID);
+        }
         Long exists = userMapper.selectCount(new LambdaQueryWrapper<User>()
                 .eq(User::getUsername, dto.getUsername()));
         if (exists != null && exists > 0) {

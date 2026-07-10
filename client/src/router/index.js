@@ -37,6 +37,7 @@ const routes = [
       { path: 'students', component: () => import('../views/admin/StudentTracking.vue') },
       { path: 'reports', component: () => import('../views/admin/Reports.vue') },
       { path: 'announcements', component: () => import('../views/admin/Announcements.vue') },
+      { path: 'locations', component: () => import('../views/admin/Locations.vue') },
       { path: 'blacklist', component: () => import('../views/admin/Blacklist.vue') }
     ]
   }
