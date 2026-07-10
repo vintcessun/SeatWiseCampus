@@ -1,6 +1,7 @@
 package com.seatwise.controller;
 
 import cn.dev33.satoken.annotation.SaCheckRole;
+import cn.dev33.satoken.stp.StpUtil;
 import com.seatwise.common.R;
 import com.seatwise.dto.LayoutDTO;
 import com.seatwise.entity.Building;
@@ -61,6 +62,14 @@ public class BaseDataController {
     public R<Void> toggleSeat(@PathVariable Long seatId, @RequestParam Integer enabled) {
         baseDataService.toggleSeat(seatId, enabled);
         return R.ok();
+    }
+
+    @SaCheckRole("ADMIN")
+    @PostMapping("/study-rooms/{id}/status")
+    public R<Map<String, Object>> setRoomStatus(@PathVariable Long id, @RequestParam String status) {
+        Long adminId = Long.valueOf(StpUtil.getLoginId().toString());
+        int affected = baseDataService.setRoomStatus(id, status, adminId);
+        return R.ok(Map.of("status", status.toUpperCase(), "affected", affected));
     }
 
     @SaCheckRole("ADMIN")

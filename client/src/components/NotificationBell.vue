@@ -14,7 +14,7 @@
       <div v-if="!list.length" style="color:#8a93a6;text-align:center;margin-top:40px">暂无通知</div>
       <div v-for="n in list" :key="n.id" class="noti" :class="{ unread: !n.readFlag }" @click="read(n)">
         <div class="noti-top">
-          <el-tag size="small" :type="typeColor(n.type)" effect="plain">{{ typeLabel(n.type) }}</el-tag>
+          <el-tag size="small" :type="typeColor(n.type)" effect="plain">{{ typeIcon(n.type) }} {{ typeLabel(n.type) }}</el-tag>
           <b>{{ n.title }}</b>
           <span class="noti-time">{{ fmt(n.createdTime) }}</span>
         </div>
@@ -36,9 +36,20 @@ const list = ref([])
 const drawer = ref(false)
 let stream = null
 
-const typeMap = { SCORE: ['积分', 'warning'], BLACKLIST: ['黑名单', 'danger'], RESERVATION: ['预约', 'primary'], SYSTEM: ['系统', 'info'] }
-const typeLabel = (t) => typeMap[t]?.[0] || t
+// 与后端 NotificationService 发出的 type 一一对应：[标签, 颜色, 图标]
+const typeMap = {
+  SCORE: ['积分', 'warning', '⭐'],
+  BLACKLIST: ['黑名单', 'danger', '⛔'],
+  WAITLIST: ['候补', 'success', '🔔'],
+  GROUP: ['组队', 'primary', '👥'],
+  ANNOUNCEMENT: ['公告', 'info', '📢'],
+  REMINDER: ['提醒', 'warning', '⏰'],
+  RESERVATION: ['预约', 'primary', '📋'],
+  SYSTEM: ['系统', 'info', '🛎️']
+}
+const typeLabel = (t) => typeMap[t]?.[0] || '通知'
 const typeColor = (t) => typeMap[t]?.[1] || 'info'
+const typeIcon = (t) => typeMap[t]?.[2] || '🔔'
 const fmt = (t) => t ? String(t).replace('T', ' ').slice(5, 16) : ''
 
 onMounted(async () => {

@@ -17,7 +17,8 @@ export const baseApi = {
   generateLayout: (roomId, params) => http.post(`/study-rooms/${roomId}/generate-layout`, null, { params }),
   createCampus: (data) => http.post('/campuses', data),
   createBuilding: (data) => http.post('/buildings', data),
-  createRoom: (data) => http.post('/study-rooms', data)
+  createRoom: (data) => http.post('/study-rooms', data),
+  setRoomStatus: (roomId, status) => http.post(`/study-rooms/${roomId}/status`, null, { params: { status } })
 }
 
 export const adminApi = {

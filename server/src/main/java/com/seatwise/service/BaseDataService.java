@@ -1,6 +1,8 @@
 package com.seatwise.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.seatwise.common.BizError;
+import com.seatwise.common.BizException;
 import com.seatwise.dto.LayoutDTO;
 import com.seatwise.entity.*;
 import com.seatwise.mapper.*;
@@ -8,16 +10,22 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class BaseDataService {
 
+    private static final List<String> ACTIVE = List.of("PENDING_SIGN_IN", "IN_USE");
+
     private final CampusMapper campusMapper;
     private final BuildingMapper buildingMapper;
     private final StudyRoomMapper roomMapper;
     private final SeatMapper seatMapper;
+    private final ReservationMapper reservationMapper;
+    private final AnnouncementService announcementService;
+    private final NotificationService notificationService;
 
     public List<Campus> listCampuses() {
         return campusMapper.selectList(new LambdaQueryWrapper<Campus>().orderByAsc(Campus::getId));
@@ -68,8 +76,18 @@ public class BaseDataService {
         return map;
     }
 
+    /** 该房间是否存在未来（待签到/进行中）预约 */
+    private long activeReservations(Long roomId) {
+        Long n = reservationMapper.selectCount(new LambdaQueryWrapper<Reservation>()
+                .eq(Reservation::getRoomId, roomId).in(Reservation::getStatus, ACTIVE));
+        return n == null ? 0 : n;
+    }
+
     @Transactional
     public void saveLayout(Long roomId, LayoutDTO dto) {
+        // R10：重排会清空座位，若存在未来预约则拒绝，避免学生到馆座位不存在
+        if (activeReservations(roomId) > 0)
+            throw new BizException(BizError.ROOM_HAS_FUTURE_RESERVATION);
         // 简化：清空该房间座位后按布局重建（演示场景数据量小）
         seatMapper.delete(new LambdaQueryWrapper<Seat>().eq(Seat::getRoomId, roomId));
         if (dto.getCells() == null) return;
@@ -88,6 +106,8 @@ public class BaseDataService {
     /** 按行列快速生成标准座位网格（指定过道列），覆盖原排布。 */
     @Transactional
     public void generateLayout(Long roomId, int rows, int cols, Integer aisleCol) {
+        if (activeReservations(roomId) > 0)
+            throw new BizException(BizError.ROOM_HAS_FUTURE_RESERVATION);
         rows = Math.max(1, Math.min(rows, 20));
         cols = Math.max(1, Math.min(cols, 20));
         seatMapper.delete(new LambdaQueryWrapper<Seat>().eq(Seat::getRoomId, roomId));
@@ -114,9 +134,44 @@ public class BaseDataService {
 
     public void toggleSeat(Long seatId, Integer enabled) {
         Seat s = seatMapper.selectById(seatId);
-        if (s != null) {
-            s.setEnabled(enabled);
-            seatMapper.updateById(s);
+        if (s == null) return;
+        // R10：停用座位前校验该座位是否存在未来预约
+        if (enabled != null && enabled == 0) {
+            Long n = reservationMapper.selectCount(new LambdaQueryWrapper<Reservation>()
+                    .eq(Reservation::getSeatId, seatId).in(Reservation::getStatus, ACTIVE));
+            if (n != null && n > 0) throw new BizException(BizError.SEAT_HAS_FUTURE_RESERVATION);
         }
+        s.setEnabled(enabled);
+        seatMapper.updateById(s);
+    }
+
+    /**
+     * R4 + R10：切换自习室开放/关闭状态。关闭时联动公告并通知受影响（有未来预约）的学生。
+     * @return 受影响的预约数
+     */
+    @Transactional
+    public int setRoomStatus(Long roomId, String status, Long adminId) {
+        StudyRoom room = roomMapper.selectById(roomId);
+        if (room == null) throw new BizException(BizError.BAD_REQUEST, "自习室不存在");
+        String target = "CLOSED".equalsIgnoreCase(status) ? "CLOSED" : "OPEN";
+        room.setStatus(target);
+        roomMapper.updateById(room);
+
+        if (!"CLOSED".equals(target)) return 0;
+        // 关闭：通知所有有未来预约的学生，并生成一条公告
+        List<Reservation> active = reservationMapper.selectList(new LambdaQueryWrapper<Reservation>()
+                .eq(Reservation::getRoomId, roomId).in(Reservation::getStatus, ACTIVE));
+        Set<Long> users = new LinkedHashSet<>();
+        for (Reservation r : active) users.add(r.getUserId());
+        for (Long uid : users) {
+            notificationService.notify(uid, "ANNOUNCEMENT", "⚠️ 自习室临时关闭",
+                    "「" + room.getName() + "」已临时关闭，你在该自习室的预约可能受影响，请留意安排改约。");
+        }
+        try {
+            announcementService.create(adminId, "自习室临时关闭：" + room.getName(),
+                    "「" + room.getName() + "」因维护/占用等原因临时关闭，暂停新的预约，给您带来不便敬请谅解。",
+                    "WARN", false);
+        } catch (Exception ignored) { }
+        return users.size();
     }
 }

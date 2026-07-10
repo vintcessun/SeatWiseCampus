@@ -54,6 +54,7 @@ public class ReservationService {
         // 4. 时间校验
         StudyRoom room = roomMapper.selectById(roomId);
         if (room == null) throw new BizException(BizError.INVALID_TIME_RANGE, "自习室不存在");
+        if ("CLOSED".equalsIgnoreCase(room.getStatus())) throw new BizException(BizError.ROOM_CLOSED);
         if (!startTime.isBefore(endTime)) throw new BizException(BizError.INVALID_TIME_RANGE);
         if (startTime.getMinute() % slotMin != 0 || endTime.getMinute() % slotMin != 0)
             throw new BizException(BizError.INVALID_TIME_RANGE, "时间需按 " + slotMin + " 分钟对齐");
@@ -168,6 +169,7 @@ public class ReservationService {
         // 时间 / 自习室校验（与单座一致）
         StudyRoom room = roomMapper.selectById(roomId);
         if (room == null) throw new BizException(BizError.INVALID_TIME_RANGE, "自习室不存在");
+        if ("CLOSED".equalsIgnoreCase(room.getStatus())) throw new BizException(BizError.ROOM_CLOSED);
         if (!startTime.isBefore(endTime)) throw new BizException(BizError.INVALID_TIME_RANGE);
         if (startTime.getMinute() % slotMin != 0 || endTime.getMinute() % slotMin != 0)
             throw new BizException(BizError.INVALID_TIME_RANGE, "时间需按 " + slotMin + " 分钟对齐");

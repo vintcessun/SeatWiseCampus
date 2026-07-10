@@ -27,6 +27,19 @@
         <el-tag v-else type="success" effect="plain" size="small">当前 {{ freeCount }} 个空位</el-tag>
         <el-divider direction="vertical" />
         <el-switch v-model="groupMode" active-text="组队相邻预约" @change="onGroupToggle" />
+        <el-popover placement="bottom" :width="320" trigger="click">
+          <template #reference>
+            <el-button link type="primary" :icon="InfoFilled">预约须知</el-button>
+          </template>
+          <div style="font-weight:700;margin-bottom:6px">📋 预约须知</div>
+          <ul style="margin:0;padding-left:18px;line-height:1.9;font-size:13px;color:var(--el-text-color-regular)">
+            <li>预约成功后请在<b>签到窗口（开始后 15 分钟内）</b>完成签到</li>
+            <li>超时未签到将<b>自动释放</b>座位并计入<b>爽约</b>（扣分）</li>
+            <li>临近开始时间取消可能<b>扣分</b>；守约完成可<b>加分</b></li>
+            <li>连续爽约达阈值将进入<b>黑名单</b>，暂停预约权限</li>
+            <li>每日预约有次数上限；预约开始时间需晚于当前时间</li>
+          </ul>
+        </el-popover>
       </div>
     </el-card>
 
@@ -94,7 +107,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Refresh, Bell, User } from '@element-plus/icons-vue'
+import { Refresh, Bell, User, InfoFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import SeatGrid from '../../components/SeatGrid.vue'
 import { boardApi, reservationApi, holdApi, nearbyApi, waitlistApi } from '../../api'

@@ -22,10 +22,13 @@
             <el-tag :type="row.status==='OPEN'?'success':'info'">{{ row.status==='OPEN'?'开放':'关闭' }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="260">
+        <el-table-column label="操作" width="360">
           <template #default="{ row }">
             <el-button size="small" @click="$router.push(`/admin/rooms/${row.id}/layout`)">座位排布</el-button>
             <el-button size="small" type="primary" @click="$router.push(`/admin/rooms/${row.id}/board`)">实时看板</el-button>
+            <el-button size="small" :type="row.status==='OPEN'?'warning':'success'" plain @click="toggleStatus(row)">
+              {{ row.status==='OPEN' ? '临时关闭' : '重新开放' }}
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -57,7 +60,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { baseApi } from '../../api'
 
 const rooms = ref([])
@@ -76,6 +79,20 @@ async function loadAll() {
 }
 function buildingName(id) { return buildings.value.find(b => b.id === id)?.name || '' }
 function fmt(t) { return t ? String(t).slice(0, 5) : '' }
+
+async function toggleStatus(row) {
+  const toClose = row.status === 'OPEN'
+  try {
+    if (toClose) {
+      await ElMessageBox.confirm(
+        `确认临时关闭「${row.name}」？关闭后将暂停新预约，并自动通知有未来预约的学生。`,
+        '临时关闭自习室', { type: 'warning', confirmButtonText: '确认关闭' })
+    }
+    const res = await baseApi.setRoomStatus(row.id, toClose ? 'CLOSED' : 'OPEN')
+    ElMessage.success(toClose ? `已关闭，已通知 ${res.affected} 位受影响学生` : '已重新开放')
+    await loadAll()
+  } catch (e) { if (e !== 'cancel') { /* 拦截器提示 */ } }
+}
 
 function openCreate() {
   if (buildings.value.length) form.buildingId = buildings.value[0].id

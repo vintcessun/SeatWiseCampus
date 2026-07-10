@@ -5,7 +5,7 @@
         <div class="hero-hi">管理控制台概览 📊</div>
         <div class="hero-sub">SeatWise · 实时掌握自习室运行状况</div>
       </div>
-      <el-button color="#ffffff" @click="load" plain>刷新</el-button>
+      <el-button class="hero-refresh" :icon="Refresh" :loading="loading" round @click="load">刷新数据</el-button>
     </div>
 
     <el-row :gutter="16" style="margin-bottom:16px">
@@ -47,6 +47,7 @@
 <script setup>
 import { ref, reactive, onMounted, nextTick } from 'vue'
 import * as echarts from 'echarts'
+import { Refresh } from '@element-plus/icons-vue'
 import { reportApi, baseApi, boardApi } from '../../api'
 import { todayLocal } from '../../utils/date'
 import CountUp from '../../components/CountUp.vue'
@@ -55,10 +56,13 @@ const data = reactive({})
 const rooms = ref([])
 const roomLive = ref([])
 const pieEl = ref()
+const loading = ref(false)
 const statusLabel = { PENDING_SIGN_IN: '待签到', IN_USE: '使用中', COMPLETED: '已完成', CANCELLED: '已取消', EXPIRED_RELEASED: '爽约释放' }
 
 onMounted(load)
 async function load() {
+  loading.value = true
+  try {
   Object.assign(data, await reportApi.summary().catch(() => ({})))
   rooms.value = await baseApi.rooms({}).catch(() => [])
   // 实时空位：当前时段各自习室快照
@@ -76,6 +80,7 @@ async function load() {
   }
   roomLive.value = live
   await nextTick(); renderPie()
+  } finally { loading.value = false }
 }
 function renderPie() {
   if (!pieEl.value) return
@@ -91,6 +96,8 @@ function renderPie() {
 
 <style scoped>
 .hero { background: linear-gradient(135deg, #1a2233, #3b3f6b); color: #fff; border-radius: 16px; padding: 22px 26px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.hero-refresh { background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.4); color: #fff; backdrop-filter: blur(6px); font-weight: 600; }
+.hero-refresh:hover { background: rgba(255,255,255,.28); border-color: #fff; color: #fff; }
 .hero-hi { font-size: 20px; font-weight: 800; }
 .hero-sub { opacity: .85; margin-top: 6px; }
 .ov { display: flex; align-items: center; gap: 14px; }
