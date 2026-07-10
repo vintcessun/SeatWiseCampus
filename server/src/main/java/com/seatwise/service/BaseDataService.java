@@ -145,6 +145,15 @@ public class BaseDataService {
         seatMapper.updateById(s);
     }
 
+    /** R3：删除自习室（连带座位）。存在未来预约时拒绝。 */
+    @Transactional
+    public void deleteRoom(Long roomId) {
+        if (activeReservations(roomId) > 0)
+            throw new BizException(BizError.ROOM_HAS_FUTURE_RESERVATION, "该自习室存在未来预约，不能删除");
+        seatMapper.delete(new LambdaQueryWrapper<Seat>().eq(Seat::getRoomId, roomId));
+        roomMapper.deleteById(roomId);
+    }
+
     /**
      * R4 + R10：切换自习室开放/关闭状态。关闭时联动公告并通知受影响（有未来预约）的学生。
      * @return 受影响的预约数

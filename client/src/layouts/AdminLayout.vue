@@ -8,6 +8,7 @@
                active-text-color="#fff">
         <el-menu-item index="/admin/dashboard"><el-icon><Odometer /></el-icon><span>概览首页</span></el-menu-item>
         <el-menu-item index="/admin/rooms"><el-icon><OfficeBuilding /></el-icon><span>自习室与座位</span></el-menu-item>
+        <el-menu-item index="/admin/spacetime"><el-icon><Compass /></el-icon><span>时空占用图</span></el-menu-item>
         <el-menu-item index="/admin/students"><el-icon><User /></el-icon><span>学生预约追踪</span></el-menu-item>
         <el-menu-item index="/admin/reports"><el-icon><DataAnalysis /></el-icon><span>数据报表</span></el-menu-item>
         <el-menu-item index="/admin/announcements"><el-icon><Bell /></el-icon><span>公告管理</span></el-menu-item>

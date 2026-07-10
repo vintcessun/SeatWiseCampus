@@ -65,6 +65,13 @@ public class BaseDataController {
     }
 
     @SaCheckRole("ADMIN")
+    @DeleteMapping("/study-rooms/{id}")
+    public R<Void> deleteRoom(@PathVariable Long id) {
+        baseDataService.deleteRoom(id);
+        return R.ok();
+    }
+
+    @SaCheckRole("ADMIN")
     @PostMapping("/study-rooms/{id}/status")
     public R<Map<String, Object>> setRoomStatus(@PathVariable Long id, @RequestParam String status) {
         Long adminId = Long.valueOf(StpUtil.getLoginId().toString());

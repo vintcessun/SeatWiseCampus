@@ -18,6 +18,7 @@ export const baseApi = {
   createCampus: (data) => http.post('/campuses', data),
   createBuilding: (data) => http.post('/buildings', data),
   createRoom: (data) => http.post('/study-rooms', data),
+  deleteRoom: (roomId) => http.delete(`/study-rooms/${roomId}`),
   setRoomStatus: (roomId, status) => http.post(`/study-rooms/${roomId}/status`, null, { params: { status } })
 }
 

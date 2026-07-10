@@ -17,6 +17,7 @@ const routes = [
       { path: 'reservations', component: () => import('../views/student/Reservations.vue') },
       { path: 'waitlist', component: () => import('../views/student/Waitlist.vue') },
       { path: 'report', component: () => import('../views/student/StudyReport.vue') },
+      { path: 'pomodoro', component: () => import('../views/student/Pomodoro.vue') },
       { path: 'ranking', component: () => import('../views/student/Ranking.vue') },
       { path: 'nearby', component: () => import('../views/student/Nearby.vue') }
     ]
@@ -32,6 +33,7 @@ const routes = [
       { path: 'rooms/:roomId/layout', component: () => import('../views/admin/LayoutEditor.vue') },
       { path: 'rooms/:roomId/board', component: () => import('../views/admin/Board.vue') },
       { path: 'rooms/:roomId/replay', component: () => import('../views/admin/Replay.vue') },
+      { path: 'spacetime', component: () => import('../views/student/Spacetime.vue') },
       { path: 'students', component: () => import('../views/admin/StudentTracking.vue') },
       { path: 'reports', component: () => import('../views/admin/Reports.vue') },
       { path: 'announcements', component: () => import('../views/admin/Announcements.vue') },

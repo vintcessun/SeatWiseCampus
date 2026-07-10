@@ -5,7 +5,10 @@
         <div class="page-title">自习室与座位</div>
         <div class="page-sub">新增自习室、维护座位排布（生成/启用/禁用）、查看实时看板</div>
       </div>
-      <el-button type="primary" :icon="Plus" @click="openCreate">新增自习室</el-button>
+      <div style="display:flex;gap:8px">
+        <el-button :icon="OfficeBuilding" @click="bldDialog = true">新增楼栋</el-button>
+        <el-button type="primary" :icon="Plus" @click="openCreate">新增自习室</el-button>
+      </div>
     </div>
 
     <el-card shadow="never">
@@ -29,6 +32,7 @@
             <el-button size="small" :type="row.status==='OPEN'?'warning':'success'" plain @click="toggleStatus(row)">
               {{ row.status==='OPEN' ? '临时关闭' : '重新开放' }}
             </el-button>
+            <el-button size="small" type="danger" plain @click="removeRoom(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -54,28 +58,69 @@
         <el-button type="primary" :loading="saving" @click="save">创建</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="bldDialog" title="新增楼栋" width="420px">
+      <el-form label-width="90px">
+        <el-form-item label="所属校区">
+          <el-select v-model="bldForm.campusId" placeholder="选择校区" style="width:100%">
+            <el-option v-for="c in campuses" :key="c.id" :label="c.name" :value="c.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="楼栋名称"><el-input v-model="bldForm.name" placeholder="如 图书馆B座" /></el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="bldDialog=false">取消</el-button>
+        <el-button type="primary" :loading="bldSaving" @click="saveBuilding">创建</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, OfficeBuilding } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { baseApi } from '../../api'
 
 const rooms = ref([])
 const buildings = ref([])
+const campuses = ref([])
 const dialog = ref(false)
 const saving = ref(false)
 const form = reactive({ buildingId: null, name: '', floorNo: 1, openStart: '08:00', openEnd: '22:00' })
+const bldDialog = ref(false)
+const bldSaving = ref(false)
+const bldForm = reactive({ campusId: null, name: '' })
 
 onMounted(loadAll)
 async function loadAll() {
-  const campuses = await baseApi.campuses()
+  campuses.value = await baseApi.campuses()
   let bs = []
-  for (const c of campuses) bs = bs.concat(await baseApi.buildings(c.id))
+  for (const c of campuses.value) bs = bs.concat(await baseApi.buildings(c.id))
   buildings.value = bs
   rooms.value = await baseApi.rooms({})
+  if (!bldForm.campusId && campuses.value.length) bldForm.campusId = campuses.value[0].id
+}
+
+async function saveBuilding() {
+  if (!bldForm.campusId || !bldForm.name) { ElMessage.warning('请选择校区并填写名称'); return }
+  bldSaving.value = true
+  try {
+    await baseApi.createBuilding({ campusId: bldForm.campusId, name: bldForm.name })
+    ElMessage.success('楼栋已创建')
+    bldDialog.value = false
+    bldForm.name = ''
+    await loadAll()
+  } catch (e) { /* 拦截器提示 */ } finally { bldSaving.value = false }
+}
+
+async function removeRoom(row) {
+  try {
+    await ElMessageBox.confirm(`确认删除「${row.name}」？将同时删除其座位（存在未来预约时不可删除）。`, '删除自习室', { type: 'warning', confirmButtonText: '确认删除' })
+    await baseApi.deleteRoom(row.id)
+    ElMessage.success('已删除')
+    await loadAll()
+  } catch (e) { if (e !== 'cancel') { /* 拦截器提示 */ } }
 }
 function buildingName(id) { return buildings.value.find(b => b.id === id)?.name || '' }
 function fmt(t) { return t ? String(t).slice(0, 5) : '' }

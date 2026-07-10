@@ -12,7 +12,14 @@
         <el-button :type="playing ? 'warning' : 'primary'" :icon="playing ? VideoPause : VideoPlay" @click="togglePlay">
           {{ playing ? '暂停' : '播放一天' }}
         </el-button>
-        <div style="margin-left:auto;font-size:13px;color:#8a93a6">此刻空闲 <b style="color:#1f9d55">{{ freeCount }}</b> / {{ data.totalSeats || 0 }} · 可预约到 <b>{{ current?.label }}</b> 起</div>
+        <template v-if="!isAdmin">
+          <el-divider direction="vertical" />
+          <span style="font-size:13px;color:#8a93a6">时长</span>
+          <el-select v-model="duration" style="width:96px" size="default">
+            <el-option v-for="h in [1,2,3,4]" :key="h" :label="h + ' 小时'" :value="h" />
+          </el-select>
+        </template>
+        <div style="margin-left:auto;font-size:13px;color:#8a93a6">此刻空闲 <b style="color:#1f9d55">{{ freeCount }}</b> / {{ data.totalSeats || 0 }} · 起始 <b>{{ current?.label }}</b></div>
       </div>
       <div style="padding:6px 6px 0">
         <div style="font-weight:700;font-size:26px;color:var(--el-color-primary);letter-spacing:1px">{{ current?.label || '--:--' }}</div>
@@ -51,8 +58,10 @@
             <div v-for="(f, i) in frames" :key="f.slotIndex" class="bar" :class="{ on: i === fi }"
               :style="{ height: barH(f) }" :title="`${f.label} · ${f.occupiedCount} 占用`" @click="fi = i; pause()"></div>
           </div>
-          <el-alert type="info" :closable="false" show-icon style="margin-top:14px"
-            title="点击发光的绿色座位，即可带着「该开始时刻」跳转到选座页一键预约。" />
+          <el-alert v-if="!isAdmin" type="info" :closable="false" show-icon style="margin-top:14px"
+            :title="`点击可容纳 ${duration}h 的发光座位，即可带着「${current?.label}-${endLabel}」一步预约。`" />
+          <el-alert v-else type="info" :closable="false" show-icon style="margin-top:14px"
+            title="管理视图：拖动时间轴查看任意时刻的空间占用分布。" />
         </el-card>
       </el-col>
     </el-row>
@@ -67,11 +76,14 @@
         <div style="display:flex;justify-content:space-between;font-size:12px;color:#8a93a6;margin-top:4px">
           <span>{{ frames[0]?.label }}</span><span>{{ frames[frames.length - 1]?.label }}</span>
         </div>
-        <p style="margin:14px 0 0">从 <b>{{ current?.label }}</b> 起连续可用 <b style="color:#1f9d55">{{ picked.freeHours }} 小时</b>。</p>
+        <p style="margin:14px 0 0">从 <b>{{ current?.label }}</b> 起连续可用 <b style="color:#1f9d55">{{ picked.freeHours }} 小时</b>。
+          <el-tag v-if="picked.freeHours >= duration" type="success" effect="plain" size="small">可满足 {{ duration }}h</el-tag>
+          <el-tag v-else type="warning" effect="plain" size="small">不足 {{ duration }}h</el-tag>
+        </p>
       </div>
       <template #footer>
         <el-button @click="dlg = false">关闭</el-button>
-        <el-button type="primary" @click="goBook">以 {{ current?.label }} 为开始去预约 →</el-button>
+        <el-button v-if="!isAdmin" type="primary" @click="goBook">预约 {{ current?.label }}-{{ endLabel }} →</el-button>
       </template>
     </el-dialog>
   </div>
@@ -83,8 +95,12 @@ import { useRouter } from 'vue-router'
 import { VideoPlay, VideoPause } from '@element-plus/icons-vue'
 import { boardApi, baseApi } from '../../api'
 import { todayLocal } from '../../utils/date'
+import { useUserStore } from '../../stores/user'
 
 const router = useRouter()
+const user = useUserStore()
+const isAdmin = computed(() => user.role === 'ADMIN' || user.userInfo?.role === 'ADMIN')
+const duration = ref(2)
 const rooms = ref([])
 const roomId = ref(null)
 const date = ref(todayLocal())
@@ -137,8 +153,13 @@ const marks = computed(() => { const m = {}; frames.value.forEach((f, i) => { if
 const dlg = ref(false)
 const picked = ref(null)
 function pick(c) { picked.value = c; dlg.value = true }
+const endLabel = computed(() => {
+  const lbl = current.value?.label || '00:00'
+  const [h, m] = lbl.split(':').map(Number)
+  return String((h + duration.value) % 24).padStart(2, '0') + ':' + String(m).padStart(2, '0')
+})
 function goBook() {
-  router.push({ path: `/student/rooms/${roomId.value}/seats`, query: { date: date.value, start: current.value.label } })
+  router.push({ path: `/student/rooms/${roomId.value}/seats`, query: { date: date.value, start: current.value.label, end: endLabel.value } })
 }
 
 function pause() { playing.value = false }
