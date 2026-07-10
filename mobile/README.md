@@ -55,5 +55,23 @@ open iosApp.xcodeproj                          # Xcode 运行到模拟器/真机
 
 在 GitHub 仓库 Actions 页手动触发（workflow_dispatch）或 push `mobile/**` 即自动运行，完成后在 run 的 **Artifacts** 下载 APK / IPA。
 
+### 获取产物的前置步骤（重要）
+1. **启用 Actions**：本仓库当前 **Actions 处于关闭状态**（API 返回 404），需先到
+   GitHub → 仓库 **Settings → Actions → General → Allow all actions** 打开。
+   （这是仓库安全设置，需仓库管理员手动开启；出于安全考量，工具不会自动修改。）
+2. **触发构建**：Actions 页选 “Mobile Build (APK + IPA)” → **Run workflow**，
+   或再 push 一次 `mobile/**`。
+3. **下载产物**：run 结束后在底部 **Artifacts** 区下载：
+   - `SeatWise-android-apk`（可直接安装到 Android）
+   - `SeatWise-ios-ipa-unsigned`（未签名 IPA，侧载/模拟器用；正式分发需配 Apple 证书）
+
+> **成本提示**：Android job 跑在 ubuntu（便宜/免费额度）；iOS job 跑在 **macos runner（计费约 10×）**。
+> 若只想先出 APK，可在 Actions 页仅重跑 `android-apk` job。
+
+## 已知限制（本机构建）
+- **iOS/IPA 只能在 macOS + Xcode 上编译**：Windows/Linux 本机无法产出 IPA，必须走 macOS（本机或 CI）。
+- 本仓库开发机在离线/受限网络下**无法本地构建 APK**：Android SDK 命令行工具（~150MB）
+  与 Gradle/依赖（~700MB）下载被网络截断。请用 CI 或在网络通畅的机器上构建。
+
 ## 技术栈
 Kotlin 2.0.21 · Compose Multiplatform 1.7.1 · AGP 8.5.2 · Ktor 2.3.12 · kotlinx.serialization/coroutines · Gradle 8.9。
