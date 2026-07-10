@@ -1,0 +1,75 @@
+name: Mobile Build (APK + IPA)
+
+on:
+  push:
+    paths:
+      - "mobile/**"
+      - ".github/workflows/mobile-build.yml"
+  workflow_dispatch:
+
+jobs:
+  android-apk:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - name: Grant gradlew exec
+        run: chmod +x gradlew
+      - name: Assemble debug APK
+        run: ./gradlew :androidApp:assembleDebug --no-daemon --stacktrace
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: SeatWise-android-apk
+          path: mobile/androidApp/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
+  ios-ipa:
+    name: Build iOS IPA (unsigned)
+    runs-on: macos-14
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate Xcode project
+        working-directory: mobile/iosApp
+        run: xcodegen generate
+      - name: Grant gradlew exec
+        run: chmod +x gradlew
+      - name: Archive (unsigned) & package IPA
+        run: |
+          cd iosApp
+          xcodebuild \
+            -project iosApp.xcodeproj \
+            -scheme iosApp \
+            -configuration Release \
+            -sdk iphoneos \
+            -archivePath "$PWD/build/SeatWise.xcarchive" \
+            archive \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" AD_HOC_CODE_SIGNING_ALLOWED=YES
+          APP="$PWD/build/SeatWise.xcarchive/Products/Applications/iosApp.app"
+          mkdir -p "$PWD/build/Payload"
+          cp -R "$APP" "$PWD/build/Payload/"
+          cd "$PWD/build"
+          zip -qr SeatWise-unsigned.ipa Payload
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: SeatWise-ios-ipa-unsigned
+          path: mobile/iosApp/build/SeatWise-unsigned.ipa
+          if-no-files-found: error

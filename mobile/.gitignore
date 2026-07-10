@@ -1,0 +1,14 @@
+.gradle/
+**/build/
+local.properties
+*.iml
+.idea/
+.kotlin/
+# iOS generated
+iosApp/iosApp.xcodeproj/
+iosApp/build/
+Payload/
+*.ipa
+*.apk
+xcuserdata/
+DerivedData/
