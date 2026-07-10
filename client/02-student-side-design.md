@@ -3,7 +3,7 @@
 - **文档目的**：定义学生端交互流程与页面行为。
 - **适用范围**：学生端全部页面。
 - **读者对象**：前端/Agent。
-- **相关文件**：[01-page-route-map](01-page-route-map.md)、[04-seat-grid-and-heatmap](04-seat-grid-and-heatmap.md)、[08-frontend-validation-and-error-handling](08-frontend-validation-and-error-handling.md)。
+- **相关文件**：[01-page-route-map](01-page-route-map.md)、[04-seat-grid-and-heatmap](04-seat-grid-and-heatmap.md)、[08-frontend-validation-and-error-handling](08-frontend-validation-and-error-handling.md)、[docs/14-known-issues-v3.md](../docs/14-known-issues-v3.md)。
 
 ## 关键结论
 - 学生端核心是“筛选→选片→选座→提交”，提交结果一律以后端为准。
@@ -46,7 +46,9 @@
 使用中（IN_USE）项可主动签退；`POST /api/reservations/{id}/check-out`，成功后座位释放为 FREE 并（MVP+）+2 积分。若未主动签退，后端在预约结束时间自动完成并释放（见 [../server/06-timeout-release-and-blacklist.md](../server/06-timeout-release-and-blacklist.md) §八）。
 
 ## 八、取消预约
-`POST /reservations/{id}/cancel`；前端提示“距开始<30 分钟取消将扣分（MVP+）”，最终扣分由后端判定。
+`POST /reservations/{id}/cancel`；前端提示”距开始<30 分钟取消将扣分（MVP+）”，最终扣分由后端判定。
+
+> **已知缺陷**：缺少预约须知/规则提示（签到窗口、扣分规则、黑名单规则）展示，学生可能在无意识下违规（详见 [docs/14-known-issues-v3.md](../docs/14-known-issues-v3.md) §R8）。
 
 ## 九、黑名单提示
 命中黑名单时预约动作被后端拒绝，跳/提示 `/student/blacklist`，展示解除时间；读页面不受限。
@@ -56,6 +58,8 @@
 
 ## 十一、附近空位推荐入口【可选】
 入口进入 `/student/nearby`，手动选当前位置或浏览器定位，展示推荐列表。
+
+> **已知缺陷**：附近空位功能尚未完善，缺少真实定位集成与完整位置管理（详见 [docs/14-known-issues-v3.md](../docs/14-known-issues-v3.md) §R11）。
 
 ## 学生预约流程时序图
 ```mermaid
