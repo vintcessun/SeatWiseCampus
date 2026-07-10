@@ -48,6 +48,7 @@ private fun LoginScreen(api: SeatWiseApi, onLoggedIn: (UserInfo) -> Unit) {
     val scope = rememberCoroutineScope()
 
     fun doLogin() {
+        if (baseUrl.isBlank()) { error = "请先填写后端地址（部署后端后填公网/LAN 地址）"; return }
         api.baseUrl = baseUrl.trimEnd('/')
         loading = true; error = null
         scope.launch {
@@ -76,7 +77,12 @@ private fun LoginScreen(api: SeatWiseApi, onLoggedIn: (UserInfo) -> Unit) {
             }
         }
         Spacer(Modifier.height(24.dp))
-        OutlinedTextField(baseUrl, { baseUrl = it }, label = { Text("后端地址") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            baseUrl, { baseUrl = it },
+            label = { Text("后端地址") },
+            placeholder = { Text("如 http://192.168.1.10:18080（部署后填写）") },
+            singleLine = true, modifier = Modifier.fillMaxWidth()
+        )
         Spacer(Modifier.height(12.dp))
         OutlinedTextField(username, { username = it }, label = { Text("用户名") }, singleLine = true, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(12.dp))

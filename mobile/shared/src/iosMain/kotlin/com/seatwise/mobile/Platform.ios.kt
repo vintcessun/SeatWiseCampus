@@ -5,8 +5,9 @@ import platform.Foundation.NSCalendarUnitDay
 import platform.Foundation.NSDate
 import platform.Foundation.NSDateFormatter
 
-// iOS 模拟器可用 localhost 访问宿主；真机请在登录页改成后端所在 LAN 地址
-actual val platformBaseUrl: String = "http://localhost:18080"
+// TODO(部署后填写): 后端尚未部署，默认地址留空。部署后改为公网/LAN 地址。
+// 目前可在登录页手动输入；iOS 模拟器访问本机后端用 http://localhost:18080
+actual val platformBaseUrl: String = ""
 
 actual fun tomorrowDate(): String {
     val cal = NSCalendar.currentCalendar

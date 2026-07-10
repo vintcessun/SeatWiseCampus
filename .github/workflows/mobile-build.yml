@@ -21,6 +21,8 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: android-actions/setup-android@v3
+      - name: Install SDK packages
+        run: sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
       - name: Grant gradlew exec
         run: chmod +x gradlew
       - name: Assemble debug APK
