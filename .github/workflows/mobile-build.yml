@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - "mobile/**"
+      - "!mobile/**/*.md"        # 文档改动不触发构建（避免浪费 macOS 计费分钟）
+      - "!mobile/TODO.md"
       - ".github/workflows/mobile-build.yml"
   workflow_dispatch:
 
