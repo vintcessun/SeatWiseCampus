@@ -21,9 +21,25 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
+    // 演示签名：keystore 由 CI 用 keytool 生成（不入库）；本地没有 keystore 时回退到 debug 签名。
+    // “随便啥签名”即可——目的是产出可直接安装到手机的已签名 APK。
+    val releaseKeystore = rootProject.file("seatwise-release.jks")
+    signingConfigs {
+        create("release") {
+            if (releaseKeystore.exists()) {
+                storeFile = releaseKeystore
+                storePassword = System.getenv("KS_PASS") ?: "seatwise123"
+                keyAlias = System.getenv("KS_ALIAS") ?: "seatwise"
+                keyPassword = System.getenv("KS_KEYPASS") ?: "seatwise123"
+            }
+        }
+    }
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
+            signingConfig = if (releaseKeystore.exists())
+                signingConfigs.getByName("release") else signingConfigs.getByName("debug")
         }
     }
     packaging {

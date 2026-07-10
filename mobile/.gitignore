@@ -10,5 +10,7 @@ iosApp/build/
 Payload/
 *.ipa
 *.apk
+*.jks
+*.keystore
 xcuserdata/
 DerivedData/

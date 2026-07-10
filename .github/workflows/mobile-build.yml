@@ -25,15 +25,22 @@ jobs:
       - uses: android-actions/setup-android@v3
       - name: Install SDK packages
         run: sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+      - name: Generate signing keystore (demo)
+        run: |
+          keytool -genkeypair -v \
+            -keystore seatwise-release.jks \
+            -storepass seatwise123 -keypass seatwise123 \
+            -alias seatwise -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=SeatWise, OU=Demo, O=SeatWise, L=City, S=State, C=CN"
       - name: Grant gradlew exec
         run: chmod +x gradlew
-      - name: Assemble debug APK
-        run: ./gradlew :androidApp:assembleDebug --no-daemon --stacktrace
+      - name: Assemble signed release APK
+        run: ./gradlew :androidApp:assembleRelease --no-daemon --stacktrace
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: SeatWise-android-apk
-          path: mobile/androidApp/build/outputs/apk/debug/*.apk
+          path: mobile/androidApp/build/outputs/apk/release/*.apk
           if-no-files-found: error
 
   ios-ipa:
