@@ -14,3 +14,6 @@
 - [x] KMP + Compose Multiplatform 学生端（登录/自习室/选座预约/我的预约）
 - [x] GitHub Actions 工作流：ubuntu 出 APK、macOS 出未签名 IPA
 - [x] 登录页可手动填写后端地址（在默认地址部署前的过渡方案）
+- [x] **CI 已跑通并产出双端二进制**（run 29106680706，Android 4m36s / iOS 8m55s 均 ✓）
+  - 产物：`SeatWise-android-apk`（androidApp-debug.apk）、`SeatWise-ios-ipa-unsigned`（Payload/iosApp.app）
+  - 获取：仓库 Actions → 对应 run → Artifacts 下载；或 `gh run download <run-id>`
