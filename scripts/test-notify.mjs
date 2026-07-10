@@ -29,6 +29,8 @@ async function main() {
   let m = now.getHours() * 60 + now.getMinutes()
   let startM = Math.ceil(m / 30) * 30
   if (startM <= m) startM += 30
+  // 临近开始扣分依赖「当日仍有可预约时段」；闭馆时段（如深夜）优雅跳过
+  if (startM + 30 > 22 * 60) { console.log('  当前非开放时段（临近开始扣分需日间运行），跳过'); process.exit(0) }
   const pad = x => String(Math.floor(x / 60)).padStart(2, '0') + ':' + String(x % 60).padStart(2, '0')
   const st = pad(startM), en = pad(startM + 30)
   const T = today()

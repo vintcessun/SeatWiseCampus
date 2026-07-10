@@ -14,7 +14,9 @@ const pad = x => String(Math.floor(x / 60) % 24).padStart(2, '0') + ':' + String
 
 ;(async () => {
   console.log('历史回放测试')
-  const date = today()
+  // 用「明天」+ 固定时段，任意时刻可跑（不受当日闭馆时间影响）
+  const _t = new Date(); _t.setDate(_t.getDate() + 1)
+  const date = `${_t.getFullYear()}-${String(_t.getMonth() + 1).padStart(2, '0')}-${String(_t.getDate()).padStart(2, '0')}`
   // 注册一个全新学生，避免受既有预约/每日上限污染
   const uname = 'replaytest_' + Date.now().toString().slice(-8)
   const cap = (await api('/captcha')).data
@@ -23,9 +25,8 @@ const pad = x => String(Math.floor(x / 60) % 24).padStart(2, '0') + ':' + String
   const admin = await login('admin', 'admin123')
   const roomId = (await api(`/study-rooms?campusId=${(await api('/campuses', { token: stu })).data[0].id}`, { token: stu })).data[0].id
 
-  // 选一个未来时段（下一个整点之后 1 小时窗口）
-  const now = new Date(); const s = Math.ceil((now.getHours() * 60 + now.getMinutes()) / 30) * 30 + 30
-  if (s + 60 > 22 * 60) { console.log('  临近闭馆，跳过'); process.exit(0) }
+  // 明天固定 14:00-15:00（slot 28 起），保证可预约
+  const s = 28 * 30
   const startTime = pad(s), endTime = pad(s + 60)
   const seat = (await api(`/study-rooms/${roomId}/board?date=${date}&start=${startTime}&end=${endTime}`, { token: stu })).data.seats.find(x => x.status === 'FREE')
 
