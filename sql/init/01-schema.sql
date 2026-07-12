@@ -79,6 +79,7 @@ CREATE TABLE seat (
     col_index INT NOT NULL,
     cell_type VARCHAR(16) NOT NULL DEFAULT 'SEAT',
     seat_no VARCHAR(16),
+    tags VARCHAR(128) DEFAULT NULL,   -- 逗号分隔座位属性，如 window,power
     enabled TINYINT NOT NULL DEFAULT 1,
     deleted TINYINT NOT NULL DEFAULT 0,
     created_time DATETIME,

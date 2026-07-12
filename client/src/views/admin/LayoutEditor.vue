@@ -43,10 +43,14 @@
         <div v-for="cell in cells" :key="cell.rowIndex + '-' + cell.colIndex"
              class="seat-cell"
              :class="cellClass(cell)"
-             @mousedown="onDown(cell)" @mouseenter="onEnter(cell)" @click="onClick(cell)">
+             @mousedown="onDown(cell, $event)" @mouseenter="onEnter(cell)" @click="onClick(cell)"
+             @contextmenu.prevent="onContext(cell, $event)">
           <span v-if="cell.cellType==='SEAT'">{{ shortNo(cell.seatNo) || '座' }}</span>
           <span v-else-if="cell.cellType==='AISLE'">·</span>
           <span v-else-if="cell.cellType==='DISABLED'">✕</span>
+          <div v-if="cell.cellType==='SEAT' && (cell.tags && cell.tags.length)" class="seat-tags">
+            <span v-for="k in cell.tags" :key="k" class="seat-tag-badge">{{ tagShort(k) }}</span>
+          </div>
         </div>
       </div>
       <div class="legend" style="margin-top:16px">
@@ -54,16 +58,30 @@
         <div class="legend-item"><span class="legend-dot seat-DISABLED"></span>禁用位</div>
         <div class="legend-item"><span class="legend-dot" style="background:transparent;border:1px dashed #ccc"></span>过道</div>
         <div class="legend-item"><span class="legend-dot" style="background:transparent;border:1px solid #eee"></span>空位</div>
+        <div class="legend-item" style="color:var(--el-text-color-secondary)">右键座位可编辑属性</div>
       </div>
     </el-card>
+
+    <!-- 右键座位属性编辑菜单 -->
+    <template v-if="menuVisible">
+      <div class="tag-menu-backdrop" @click="closeMenu" @contextmenu.prevent="closeMenu"></div>
+      <div class="tag-menu" :style="{ left: menuX + 'px', top: menuY + 'px' }" @click.stop @contextmenu.prevent>
+        <div class="tag-menu-title">座位属性 · {{ menuCell?.seatNo || '未编号' }}</div>
+        <el-checkbox-group v-model="menuCell.tags" class="tag-menu-group">
+          <el-checkbox v-for="t in SEAT_TAGS" :key="t.key" :label="t.key" class="tag-menu-item">{{ t.label }}</el-checkbox>
+        </el-checkbox-group>
+        <div class="tag-menu-hint">改动随「保存布局」生效</div>
+      </div>
+    </template>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { baseApi } from '../../api'
+import { SEAT_TAGS, tagShort, toTagKeys } from '../../constants/seatTags'
 
 const route = useRoute()
 const roomId = route.params.roomId
@@ -78,6 +96,24 @@ const paint = ref('SEAT')
 const saving = ref(false)
 const painting = ref(false)
 
+// 右键属性菜单
+const menuVisible = ref(false)
+const menuX = ref(0)
+const menuY = ref(0)
+const menuCell = ref(null)
+function onContext(cell, e) {
+  if (cell.cellType !== 'SEAT') return
+  if (!cell.tags) cell.tags = []
+  menuCell.value = cell
+  menuX.value = e.clientX
+  menuY.value = e.clientY
+  menuVisible.value = true
+}
+function closeMenu() { menuVisible.value = false; menuCell.value = null }
+function onKey(e) { if (e.key === 'Escape') closeMenu() }
+onMounted(() => window.addEventListener('keydown', onKey))
+onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
+
 function cellClass(cell) {
   const base = editMode.value ? 'clickable' : (cell.cellType === 'SEAT' ? 'clickable' : '')
   if (cell.cellType === 'SEAT') return [cell.enabled ? 'seat-FREE' : 'seat-DISABLED', base]
@@ -87,11 +123,11 @@ function cellClass(cell) {
 }
 
 function applyPaint(cell) {
-  if (paint.value === 'SEAT') { cell.cellType = 'SEAT'; cell.enabled = 1 }
-  else if (paint.value === 'DISABLED') { cell.cellType = 'SEAT'; cell.enabled = 0 }
-  else { cell.cellType = paint.value; cell.enabled = 1; cell.seatNo = null }
+  if (paint.value === 'SEAT') { cell.cellType = 'SEAT'; cell.enabled = 1; if (!cell.tags) cell.tags = [] }
+  else if (paint.value === 'DISABLED') { cell.cellType = 'SEAT'; cell.enabled = 0; if (!cell.tags) cell.tags = [] }
+  else { cell.cellType = paint.value; cell.enabled = 1; cell.seatNo = null; cell.tags = [] }
 }
-function onDown(cell) { if (!editMode.value) return; painting.value = true; applyPaint(cell) }
+function onDown(cell, e) { if (e && e.button !== 0) return; if (!editMode.value) return; painting.value = true; applyPaint(cell) }
 function onEnter(cell) { if (editMode.value && painting.value) applyPaint(cell) }
 async function onClick(cell) {
   if (editMode.value) return   // 编辑模式下由 mousedown 处理
@@ -106,12 +142,12 @@ async function onClick(cell) {
 
 function addRow() {
   const r = rows.value
-  for (let c = 0; c < cols.value; c++) cells.value.push({ rowIndex: r, colIndex: c, cellType: 'EMPTY', enabled: 1, seatNo: null })
+  for (let c = 0; c < cols.value; c++) cells.value.push({ rowIndex: r, colIndex: c, cellType: 'EMPTY', enabled: 1, seatNo: null, tags: [] })
   rows.value++
 }
 function addCol() {
   const c = cols.value
-  for (let r = 0; r < rows.value; r++) cells.value.push({ rowIndex: r, colIndex: c, cellType: 'EMPTY', enabled: 1, seatNo: null })
+  for (let r = 0; r < rows.value; r++) cells.value.push({ rowIndex: r, colIndex: c, cellType: 'EMPTY', enabled: 1, seatNo: null, tags: [] })
   cols.value++
   reorder()
 }
@@ -134,7 +170,11 @@ async function save() {
       perRow[c.rowIndex] = (perRow[c.rowIndex] || 0) + 1
       seatNo = String.fromCharCode(65 + c.rowIndex) + '-' + String(perRow[c.rowIndex]).padStart(2, '0')
     }
-    return { rowIndex: c.rowIndex, colIndex: c.colIndex, cellType: c.cellType, enabled: c.enabled, seatNo }
+    return {
+      seatId: c.seatId ?? null,
+      rowIndex: c.rowIndex, colIndex: c.colIndex, cellType: c.cellType, enabled: c.enabled, seatNo,
+      tags: c.cellType === 'SEAT' ? (c.tags || []).join(',') : null
+    }
   })
   saving.value = true
   try {
@@ -148,7 +188,7 @@ async function save() {
 onMounted(load)
 async function load() {
   const data = await baseApi.layout(roomId)
-  cells.value = data.cells || []
+  cells.value = (data.cells || []).map(c => ({ ...c, tags: toTagKeys(c.tags) }))
   cols.value = data.cols || 8
   rows.value = data.rows || 6
 }
@@ -162,4 +202,16 @@ function shortNo(no) {
 <style scoped>
 .seat-EMPTY { border: 1px dashed var(--el-border-color-lighter) !important; }
 .seat-cell { user-select: none; }
+
+.tag-menu-backdrop { position: fixed; inset: 0; z-index: 3000; }
+.tag-menu {
+  position: fixed; z-index: 3001; min-width: 150px;
+  background: var(--el-bg-color-overlay); border: 1px solid var(--el-border-color);
+  border-radius: 8px; box-shadow: 0 8px 24px rgba(31,45,80,.18);
+  padding: 10px 12px;
+}
+.tag-menu-title { font-weight: 600; font-size: 13px; margin-bottom: 8px; }
+.tag-menu-group { display: flex; flex-direction: column; align-items: flex-start; }
+.tag-menu-item { display: block; margin: 0 0 2px 0; }
+.tag-menu-hint { font-size: 11px; color: var(--el-text-color-secondary); margin-top: 6px; }
 </style>

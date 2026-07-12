@@ -4,7 +4,9 @@ import com.seatwise.entity.Seat;
 import com.seatwise.entity.StudyRoom;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 从座位排布与房间信息推导座位属性标签（演示用，确定性派生，无需额外建表）。
@@ -35,6 +37,34 @@ public final class SeatTags {
             tags.add(AISLE_NEAR);
         }
         return tags;
+    }
+
+    /** 合法标签集合（内部使用，不对外暴露常量列表）。 */
+    private static final Set<String> VALID = Set.of(WINDOW, POWER, QUIET, DISCUSS, AISLE_NEAR);
+
+    /** 将逗号分隔 CSV 解析为合法标签列表（去空白、过滤非法值、保序去重）。 */
+    public static List<String> parse(String csv) {
+        List<String> result = new ArrayList<>();
+        if (csv == null || csv.isBlank()) return result;
+        Set<String> seen = new LinkedHashSet<>();
+        for (String raw : csv.split(",")) {
+            String t = raw.trim();
+            if (VALID.contains(t)) seen.add(t);
+        }
+        result.addAll(seen);
+        return result;
+    }
+
+    /** 将标签列表拼成 CSV（去重、按合法集合过滤）；空则返回 null。 */
+    public static String join(List<String> tags) {
+        if (tags == null || tags.isEmpty()) return null;
+        Set<String> seen = new LinkedHashSet<>();
+        for (String raw : tags) {
+            if (raw == null) continue;
+            String t = raw.trim();
+            if (VALID.contains(t)) seen.add(t);
+        }
+        return seen.isEmpty() ? null : String.join(",", seen);
     }
 
     public static String cn(String tag) {

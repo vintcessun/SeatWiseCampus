@@ -15,6 +15,9 @@ public class Seat {
     private Integer colIndex;
     private String cellType;      // SEAT / AISLE / EMPTY / DISABLED
     private String seatNo;
+    // updateStrategy=ALWAYS：清空标签（置 null）时也要写回，否则 updateById 默认跳过 null 字段
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
+    private String tags;          // 逗号分隔座位属性，如 window,power
     private Integer enabled;      // 1 启用 / 0 禁用
     @TableLogic
     private Integer deleted;

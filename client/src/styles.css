@@ -73,10 +73,24 @@ body, .el-card, .el-header { transition: background-color .35s ease, color .25s 
 /* 座位网格 */
 .seat-grid { display: inline-grid; gap: 8px; }
 .seat-cell {
+  position: relative;
   width: 40px; height: 40px; border-radius: 8px;
   display: grid; place-items: center;
   font-size: 11px; font-weight: 600; user-select: none;
   transition: transform .08s;
+}
+/* 座位属性徽标：贴底边、从右下角向左排列，尺寸小以免遮挡座位号 */
+.seat-tags {
+  position: absolute; right: 2px; bottom: 1px;
+  display: flex; flex-direction: row-reverse; gap: 1px;
+  pointer-events: none;
+}
+.seat-tag-badge {
+  font-size: 8px; line-height: 1; font-weight: 700;
+  padding: 1px 1.5px; border-radius: 3px;
+  border: 1px solid var(--el-color-primary, #8f5bff);
+  background: var(--el-color-primary-light-8, #f3edff);
+  color: var(--el-color-primary, #8f5bff);
 }
 .seat-cell.clickable { cursor: pointer; }
 .seat-cell.clickable:hover { transform: translateY(-3px) scale(1.06); box-shadow: 0 6px 14px rgba(31,45,80,.14); }

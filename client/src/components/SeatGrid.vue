@@ -16,6 +16,9 @@
         <span v-if="effStatus(cell) === 'HELD'">🔒{{ remain(cell) }}</span>
         <span v-else-if="cell.cellType === 'SEAT'">{{ shortNo(cell.seatNo) }}</span>
         <span v-else-if="cell.cellType === 'AISLE'">·</span>
+        <div v-if="cell.cellType === 'SEAT' && toTagKeys(cell.tags).length" class="seat-tags">
+          <span v-for="k in toTagKeys(cell.tags)" :key="k" class="seat-tag-badge">{{ tagShort(k) }}</span>
+        </div>
       </div>
     </div>
   </div>
@@ -23,6 +26,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { toTagKeys, tagShort } from '../constants/seatTags'
 
 const props = defineProps({
   cells: { type: Array, default: () => [] },

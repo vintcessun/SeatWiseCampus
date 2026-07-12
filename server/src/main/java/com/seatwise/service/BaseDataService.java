@@ -3,6 +3,7 @@ package com.seatwise.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.seatwise.common.BizError;
 import com.seatwise.common.BizException;
+import com.seatwise.common.SeatTags;
 import com.seatwise.dto.LayoutDTO;
 import com.seatwise.entity.*;
 import com.seatwise.mapper.*;
@@ -65,6 +66,7 @@ public class BaseDataService {
             c.put("cellType", s.getCellType());
             c.put("seatId", s.getId());
             c.put("seatNo", s.getSeatNo());
+            c.put("tags", s.getTags());
             c.put("enabled", s.getEnabled());
             cells.add(c);
         }
@@ -85,21 +87,56 @@ public class BaseDataService {
 
     @Transactional
     public void saveLayout(Long roomId, LayoutDTO dto) {
-        // R10：重排会清空座位，若存在未来预约则拒绝，避免学生到馆座位不存在
+        // R10：改动座位排布/属性，若存在未来预约则整体拒绝，避免影响已预约学生
         if (activeReservations(roomId) > 0)
             throw new BizException(BizError.ROOM_HAS_FUTURE_RESERVATION);
-        // 简化：清空该房间座位后按布局重建（演示场景数据量小）
-        seatMapper.delete(new LambdaQueryWrapper<Seat>().eq(Seat::getRoomId, roomId));
         if (dto.getCells() == null) return;
+
+        // upsert：有 seatId 则更新、无则插入、布局里不再出现的座位再删除
+        List<Seat> existing = seatMapper.selectList(new LambdaQueryWrapper<Seat>().eq(Seat::getRoomId, roomId));
+        Map<Long, Seat> existingMap = new HashMap<>();
+        for (Seat s : existing) existingMap.put(s.getId(), s);
+
+        StudyRoom room = roomMapper.selectById(roomId);
+        int cols = dto.getCells().stream()
+                .map(LayoutDTO.Cell::getColIndex).filter(Objects::nonNull)
+                .mapToInt(i -> i + 1).max().orElse(0);
+
+        Set<Long> keep = new HashSet<>();
         for (LayoutDTO.Cell c : dto.getCells()) {
-            Seat s = new Seat();
-            s.setRoomId(roomId);
-            s.setRowIndex(c.getRowIndex());
-            s.setColIndex(c.getColIndex());
-            s.setCellType(c.getCellType() == null ? "EMPTY" : c.getCellType());
-            s.setSeatNo("SEAT".equals(c.getCellType()) ? c.getSeatNo() : null);
-            s.setEnabled(c.getEnabled() == null ? 1 : c.getEnabled());
-            seatMapper.insert(s);
+            boolean isSeat = "SEAT".equals(c.getCellType());
+            // 标签仅对 SEAT 生效，统一归一化；新增 SEAT 且未带标签时用确定性派生播种初始值
+            String tags = isSeat ? SeatTags.join(SeatTags.parse(c.getTags())) : null;
+
+            Seat s = c.getSeatId() != null ? existingMap.get(c.getSeatId()) : null;
+            if (s != null) {
+                s.setRowIndex(c.getRowIndex());
+                s.setColIndex(c.getColIndex());
+                s.setCellType(c.getCellType() == null ? "EMPTY" : c.getCellType());
+                s.setSeatNo(isSeat ? c.getSeatNo() : null);
+                s.setTags(tags);
+                s.setEnabled(c.getEnabled() == null ? 1 : c.getEnabled());
+                seatMapper.updateById(s);
+                keep.add(s.getId());
+            } else {
+                s = new Seat();
+                s.setRoomId(roomId);
+                s.setRowIndex(c.getRowIndex());
+                s.setColIndex(c.getColIndex());
+                s.setCellType(c.getCellType() == null ? "EMPTY" : c.getCellType());
+                s.setSeatNo(isSeat ? c.getSeatNo() : null);
+                if (isSeat && tags == null) {
+                    tags = SeatTags.join(SeatTags.of(s, room, cols));
+                }
+                s.setTags(tags);
+                s.setEnabled(c.getEnabled() == null ? 1 : c.getEnabled());
+                seatMapper.insert(s);
+                keep.add(s.getId());
+            }
+        }
+        // 删除本次提交中不再出现的旧座位
+        for (Seat s : existing) {
+            if (!keep.contains(s.getId())) seatMapper.deleteById(s.getId());
         }
     }
 
@@ -110,6 +147,7 @@ public class BaseDataService {
             throw new BizException(BizError.ROOM_HAS_FUTURE_RESERVATION);
         rows = Math.max(1, Math.min(rows, 20));
         cols = Math.max(1, Math.min(cols, 20));
+        StudyRoom room = roomMapper.selectById(roomId);
         seatMapper.delete(new LambdaQueryWrapper<Seat>().eq(Seat::getRoomId, roomId));
         for (int r = 0; r < rows; r++) {
             int seq = 1;
@@ -126,6 +164,8 @@ public class BaseDataService {
                     s.setCellType("SEAT");
                     s.setSeatNo(rowLetter + "-" + String.format("%02d", seq++));
                     s.setEnabled(1);
+                    // 播种确定性派生标签作为初始值，管理员可后续在排布编辑器中覆盖
+                    s.setTags(SeatTags.join(SeatTags.of(s, room, cols)));
                 }
                 seatMapper.insert(s);
             }

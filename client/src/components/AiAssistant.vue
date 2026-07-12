@@ -60,6 +60,7 @@
 import { ref, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { aiApi } from '../api'
+import { tagCn } from '../constants/seatTags'
 
 const router = useRouter()
 const open = ref(false)
@@ -73,8 +74,6 @@ const examples = [
   '找个有插座、人少的位置',
   '图书馆里能连续坐3小时的座位'
 ]
-const tagMap = { window: '靠窗', power: '有插座', quiet: '安静区', discuss: '讨论区', near_door: '靠门' }
-const tagCn = (t) => tagMap[t] || t
 
 async function send(preset) {
   const q = (preset ?? text.value).trim()

@@ -140,7 +140,9 @@ public class AiService {
             for (SeatStatusVO s : free) {
                 Seat seat = seatMap.get(s.getSeatId());
                 if (seat == null) continue;
-                List<String> tags = SeatTags.of(seat, room, cols);
+                List<String> tags = (seat.getTags() != null && !seat.getTags().isBlank())
+                        ? SeatTags.parse(seat.getTags())
+                        : SeatTags.of(seat, room, cols);
                 double tagScore = desiredTags == null || desiredTags.isEmpty() ? 0.5
                         : (double) desiredTags.stream().filter(tags::contains).count() / desiredTags.size();
                 double score = 0.30 * 1.0                       // 连续可用（FREE 已保证整段空闲）
