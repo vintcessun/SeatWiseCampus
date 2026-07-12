@@ -68,7 +68,7 @@ async function load() {
   // 实时空位：当前时段各自习室快照
   const T = todayLocal()
   const now = new Date(); const h = now.getHours()
-  const st = `${String(h).padStart(2, '0')}:00`, en = `${String(h + 1).padStart(2, '0')}:00`
+  const st = `${String(h).padStart(2, '0')}:00`, en = h >= 23 ? '23:59' : `${String(h + 1).padStart(2, '0')}:00`
   const live = []
   for (const r of rooms.value) {
     const b = await boardApi.snapshot(r.id, { date: T, start: st, end: en }).catch(() => null)
