@@ -5,6 +5,7 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.seatwise.common.R;
 import com.seatwise.dto.LoginDTO;
 import com.seatwise.dto.RegisterDTO;
+import com.seatwise.dto.ResetPasswordDTO;
 import com.seatwise.service.AuthService;
 import com.seatwise.vo.LoginVO;
 import jakarta.validation.Valid;
@@ -31,6 +32,12 @@ public class AuthController {
     @PostMapping("/auth/logout")
     public R<Void> logout() {
         StpUtil.logout();
+        return R.ok();
+    }
+
+    @PostMapping("/auth/reset-password")
+    public R<Void> resetPassword(@Valid @RequestBody ResetPasswordDTO dto) {
+        authService.resetPassword(dto);
         return R.ok();
     }
 

@@ -9,6 +9,7 @@ public class LayoutDTO {
     private Integer rows;
     private Integer cols;
     private List<Cell> cells;
+    private String features;      // JSON: {"doors":[{row,col}], "podiums":[{row,col}]}
 
     @Data
     public static class Cell {

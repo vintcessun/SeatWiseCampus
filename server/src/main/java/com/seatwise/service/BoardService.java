@@ -103,6 +103,7 @@ public class BoardService {
         board.setStartSlot(startSlot);
         board.setEndSlot(endSlot);
         board.setSeats(list);
+        board.setFeatures(room != null ? room.getFeatures() : null);
         return board;
     }
 
@@ -180,6 +181,7 @@ public class BoardService {
         vo.setTotalSeats(totalSeats);
         vo.setSeats(metas);
         vo.setTimeline(timeline);
+        vo.setFeatures(room != null ? room.getFeatures() : null);
         return vo;
     }
 }

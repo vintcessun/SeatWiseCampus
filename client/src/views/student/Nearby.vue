@@ -1,18 +1,32 @@
 <template>
   <div class="page">
     <div class="page-title">附近有空位的自习室</div>
-    <div class="page-sub">选择你当前所在楼栋，按「同楼栋 &gt; 距离最近 &gt; 空位更多」推荐</div>
+    <div class="page-sub">选择手动选楼栋或定位查找，按「距离最近 &gt; 空位更多」推荐</div>
 
     <el-card shadow="never" style="margin-bottom:16px">
       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-        <el-select v-model="buildingId" placeholder="我当前在" style="width:200px">
-          <el-option v-for="b in buildings" :key="b.id" :label="b.name" :value="b.id" />
-        </el-select>
+        <el-radio-group v-model="locateMode" size="small">
+          <el-radio-button value="manual">自定义楼栋</el-radio-button>
+          <el-radio-button value="gps">定位查找</el-radio-button>
+        </el-radio-group>
+
+        <template v-if="locateMode === 'manual'">
+          <el-select v-model="buildingId" placeholder="我当前在" style="width:200px">
+            <el-option v-for="b in buildings" :key="b.id" :label="b.name" :value="b.id" />
+          </el-select>
+        </template>
+        <template v-else>
+          <span v-if="locatedBuilding" style="font-size:13px;color:var(--el-text-color-secondary)">
+            📍 {{ locatedBuilding.name }}
+          </span>
+          <span v-else style="font-size:13px;color:var(--el-text-color-secondary)">先点击「定位」获取位置</span>
+        </template>
+
         <el-date-picker v-model="date" type="date" value-format="YYYY-MM-DD" :clearable="false" />
         <el-time-select v-model="start" start="08:00" end="21:30" step="00:30" style="width:120px" />
         <el-time-select v-model="end" start="08:30" end="22:00" step="00:30" style="width:120px" />
+        <el-button v-if="locateMode === 'gps'" :icon="Position" :loading="locating" @click="locateMe">定位</el-button>
         <el-button type="primary" :icon="LocationInformation" @click="search">推荐</el-button>
-        <el-button :icon="Position" :loading="locating" @click="locateMe">定位我的位置</el-button>
       </div>
     </el-card>
 
@@ -21,8 +35,10 @@
         <el-card shadow="hover">
           <div style="display:flex;justify-content:space-between">
             <div style="font-weight:700;font-size:16px">{{ r.roomName }}</div>
-            <el-tag v-if="r.sameBuilding" type="success">同楼栋</el-tag>
-            <el-tag v-else type="info">{{ r.distance }} m</el-tag>
+            <el-tag v-if="r.distance != null && r.distance < 9999" type="info">
+              {{ Math.round(r.distance) > 0 ? Math.round(r.distance) + ' m' : '< 1 m' }}
+            </el-tag>
+            <el-tag v-else type="info">-- m</el-tag>
           </div>
           <div style="color:#8a93a6;font-size:13px;margin:8px 0">{{ r.buildingName }} · {{ r.floorNo }} 楼</div>
           <div style="font-size:22px;font-weight:800;color:#1f9d55">{{ r.availableSeats }} <span style="font-size:13px;color:#8a93a6">个空位</span></div>
@@ -51,6 +67,10 @@ const end = ref('16:00')
 const list = ref([])
 const searched = ref(false)
 const locating = ref(false)
+const userLat = ref(null)
+const userLng = ref(null)
+const locateMode = ref('manual')
+const locatedBuilding = ref(null)
 
 // 浏览器定位 → 就近选择楼栋（Haversine）
 function haversine(lat1, lng1, lat2, lng2) {
@@ -60,10 +80,12 @@ function haversine(lat1, lng1, lat2, lng2) {
   return 2 * R * Math.asin(Math.sqrt(a))
 }
 function locateMe() {
-  if (!navigator.geolocation) { ElMessage.warning('浏览器不支持定位，请手动选择楼栋'); return }
+  if (!navigator.geolocation) { ElMessage.warning('浏览器不支持定位，请使用自定义楼栋'); return }
   locating.value = true
   navigator.geolocation.getCurrentPosition(pos => {
     const { latitude, longitude } = pos.coords
+    userLat.value = latitude
+    userLng.value = longitude
     const withGeo = buildings.value.filter(b => b.latitude != null && b.longitude != null)
     if (!withGeo.length) { ElMessage.warning('楼栋暂无坐标，请联系管理员在「位置管理」维护'); locating.value = false; return }
     let best = null, bestD = Infinity
@@ -71,12 +93,13 @@ function locateMe() {
       const d = haversine(latitude, longitude, Number(b.latitude), Number(b.longitude))
       if (d < bestD) { bestD = d; best = b }
     }
+    locatedBuilding.value = best
     buildingId.value = best.id
     ElMessage.success(`已定位到最近楼栋：${best.name}（约 ${Math.round(bestD)} m）`)
     locating.value = false
-    search()
+    if (locateMode.value === 'gps') search()
   }, err => {
-    ElMessage.warning('定位失败或被拒绝，请手动选择楼栋')
+    ElMessage.warning('定位失败或被拒绝，请使用自定义楼栋')
     locating.value = false
   }, { enableHighAccuracy: true, timeout: 8000 })
 }
@@ -90,9 +113,20 @@ onMounted(async () => {
 })
 
 async function search() {
+  if (locateMode.value === 'gps' && !userLat.value) {
+    ElMessage.warning('请先点击「定位」获取位置')
+    return
+  }
   searched.value = true
+  let lat = userLat.value, lng = userLng.value
+  if (lat == null || lng == null) {
+    const b = buildings.value.find(x => x.id === buildingId.value)
+    if (b && b.latitude != null && b.longitude != null) {
+      lat = Number(b.latitude); lng = Number(b.longitude)
+    }
+  }
   try {
-    list.value = await nearbyApi.nearest({ originBuildingId: buildingId.value, date: date.value, start: start.value, end: end.value })
+    list.value = await nearbyApi.nearest({ originBuildingId: buildingId.value, date: date.value, start: start.value, end: end.value, userLat: lat, userLng: lng })
   } catch (e) {
     list.value = []
   }

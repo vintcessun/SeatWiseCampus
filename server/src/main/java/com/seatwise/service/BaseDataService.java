@@ -70,11 +70,13 @@ public class BaseDataService {
             c.put("enabled", s.getEnabled());
             cells.add(c);
         }
+        StudyRoom room = roomMapper.selectById(roomId);
         Map<String, Object> map = new HashMap<>();
         map.put("roomId", roomId);
         map.put("rows", rows);
         map.put("cols", cols);
         map.put("cells", cells);
+        map.put("features", room != null ? room.getFeatures() : null);
         return map;
     }
 
@@ -137,6 +139,14 @@ public class BaseDataService {
         // 删除本次提交中不再出现的旧座位
         for (Seat s : existing) {
             if (!keep.contains(s.getId())) seatMapper.deleteById(s.getId());
+        }
+        // 保存门/讲台等覆盖层
+        if (dto.getFeatures() != null) {
+            StudyRoom room = roomMapper.selectById(roomId);
+            if (room != null) {
+                room.setFeatures(dto.getFeatures());
+                roomMapper.updateById(room);
+            }
         }
     }
 

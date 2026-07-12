@@ -13,6 +13,7 @@
         <el-menu-item index="/admin/reports"><el-icon><DataAnalysis /></el-icon><span>数据报表</span></el-menu-item>
         <el-menu-item index="/admin/announcements"><el-icon><Bell /></el-icon><span>公告管理</span></el-menu-item>
         <el-menu-item index="/admin/locations"><el-icon><MapLocation /></el-icon><span>位置管理</span></el-menu-item>
+        <el-menu-item index="/admin/ranking"><el-icon><Trophy /></el-icon><span>积分排行</span></el-menu-item>
         <el-menu-item index="/admin/blacklist"><el-icon><Warning /></el-icon><span>黑名单管理</span></el-menu-item>
         <el-menu-item v-if="isPrimary" index="/admin/admins"><el-icon><UserFilled /></el-icon><span>管理员管理</span></el-menu-item>
       </el-menu>
@@ -42,7 +43,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Sunny, Moon } from '@element-plus/icons-vue'
+import { Sunny, Moon, Trophy } from '@element-plus/icons-vue'
 import { useUserStore } from '../stores/user'
 import { theme, toggleTheme } from '../utils/theme'
 

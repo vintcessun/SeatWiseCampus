@@ -70,8 +70,9 @@
     </el-card>
 
     <el-card shadow="never">
-      <SeatGrid :cells="board.seats || []" :cols="board.cols || 8" :now-ms="nowMs"
-        :selected-ids="selectedIds" :selected-seat-id="flashId" selectable @select="onSelect" />
+      <!-- GateGuard: SeatGrid now accepts :rows prop to position edge overlays. board comes from boardApi.snapshot(). User: "门和讲台仍然会抢占自习座位，要求在行列外设置" -->
+      <SeatGrid :cells="board.seats || []" :cols="board.cols || 8" :rows="board.rows || 6" :now-ms="nowMs"
+        :selected-ids="selectedIds" :selected-seat-id="flashId" :features="board.features" selectable @select="onSelect" />
     </el-card>
 
     <el-dialog v-model="dialog" title="确认预约" width="380px" @close="onDialogClose">

@@ -107,6 +107,7 @@ body, .el-card, .el-header { transition: background-color .35s ease, color .25s 
 @keyframes holdpulse { 0%,100% { box-shadow: 0 0 0 0 rgba(216,138,0,.35); } 50% { box-shadow: 0 0 0 4px rgba(216,138,0,0); } }
 .seat-AISLE, .seat-EMPTY { background: transparent; color: #c2c9d6; }
 .seat-selected { outline: 3px solid #8f5bff; outline-offset: 1px; }
+/* GateGuard: moved edge overlays (🚪/讲) outside grid to edge-row/edge-col wrappers in SeatGrid.vue and Spacetime.vue. These old absolute-positioned styles no longer needed. */
 
 .legend { display: flex; gap: 16px; flex-wrap: wrap; margin: 12px 0; }
 .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #5a6172; }

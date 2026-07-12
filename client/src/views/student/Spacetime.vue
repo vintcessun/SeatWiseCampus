@@ -39,9 +39,17 @@
             <span class="hl"><i style="background:#12915a;box-shadow:0 0 8px #12915a"></i>≥3h</span>
             <span class="hl"><i style="background:#ffd9d9"></i>占用</span>
           </div>
-          <div class="stgrid" :style="{ gridTemplateColumns: `repeat(${data.cols || 8}, 46px)` }">
+          <!-- 统一网格：(rows+2)×(cols+2) 外圈边缘 + 内圈座位，始终显示 -->
+          <div class="sp-unified-grid" :style="spGridStyle">
+            <!-- 外圈边缘标记 -->
+            <div v-for="ec in spEdgeCells" :key="ec.key"
+              class="sp-edge-cell" :class="{ placed: ec.placed }"
+              :style="{ gridRow: ec.row, gridColumn: ec.col }">
+              {{ ec.label }}
+            </div>
+            <!-- 内圈座位 -->
             <div v-for="c in orderedCells" :key="c.seatId ?? (c.rowIndex + '-' + c.colIndex)"
-              class="stcell" :class="cellClass(c)" :style="cellStyle(c)"
+              class="stcell" :class="cellClass(c)" :style="cellStyle(c, c.rowIndex + 2, c.colIndex + 2)"
               @click="c.cellType === 'SEAT' && c.enabled && !c.occupied ? pick(c) : null"
               :title="c.cellType === 'SEAT' ? c.seatNo + (c.occupied ? ' · 占用中' : ' · 连续可用 ' + c.freeHours + 'h') : ''">
               <span v-if="c.cellType === 'SEAT' && !c.occupied && c.freeHours >= 1" class="hh">{{ c.freeHours }}h</span>
@@ -134,17 +142,72 @@ function cellClass(c) {
   if (!c.enabled) return ['disabled']
   return c.occupied ? ['occ'] : ['free', 'clickable']
 }
-function cellStyle(c) {
-  if (c.cellType !== 'SEAT' || !c.enabled || c.occupied) return {}
+function cellStyle(c, gridRow, gridColumn) {
+  const base = { gridRow, gridColumn }
+  if (c.cellType !== 'SEAT' || !c.enabled || c.occupied) return base
   const t = Math.min(1, c.freeHours / 3)   // 0=浅绿 … 1=深绿
   // 浅绿 rgb(230,246,236) → 深绿 rgb(18,145,90)
   const r = Math.round(230 - t * 212)
   const g = Math.round(246 - t * 101)
   const b = Math.round(236 - t * 146)
   const glow = c.freeHours >= 3 ? '0 0 12px rgba(18,145,90,.6)' : c.freeHours >= 2 ? '0 0 7px rgba(52,193,123,.45)' : 'none'
-  return { background: `rgb(${r},${g},${b})`, color: t > 0.55 ? '#fff' : '#177245', boxShadow: glow }
+  return { ...base, background: `rgb(${r},${g},${b})`, color: t > 0.55 ? '#fff' : '#177245', boxShadow: glow }
 }
 function shortNo(no) { if (!no) return ''; const p = no.split('-'); return p.length > 1 ? p[0] + p[1] : no }
+
+// 统一网格：(rows+2)×(cols+2)，外圈边缘 + 内圈座位
+const spGridStyle = computed(() => ({
+  gridTemplateColumns: `28px repeat(${data.cols || 8}, 46px) 28px`,
+  gridTemplateRows: `46px repeat(${data.rows || 6}, 46px) 46px`,
+  gap: '8px'
+}))
+
+// 边缘标记解析（门/讲台）
+function spEdgeType(edge, offset) {
+  const f = spParseFeatures().find(e => e.edge === edge && e.offset === offset)
+  return f ? f.type : null
+}
+function spParseFeatures() {
+  const f = data.features
+  if (!f) return []
+  const raw = typeof f === 'object' ? f : (() => { try { return JSON.parse(f) } catch { return {} } })()
+  const cols = data.cols || 8; const rows = data.rows || 6
+  const conv = (list, type) => (list || []).map(item => {
+    if (item.edge) return { edge: item.edge, offset: item.offset ?? 0, type }
+    const r = item.row ?? 0; const c = item.col ?? 0
+    if (r === 0) return { edge: 'top', offset: c, type }
+    if (r === rows - 1) return { edge: 'bottom', offset: c, type }
+    if (c === 0) return { edge: 'left', offset: r, type }
+    return { edge: 'right', offset: r, type }
+  })
+  return [...conv(raw.doors, 'DOOR'), ...conv(raw.podiums, 'PODIUM')]
+}
+const spEdgeCells = computed(() => {
+  const rCount = data.rows || 6, cCount = data.cols || 8
+  const cells = []
+  // 4个角落
+  cells.push({ key: 'corner-tl', row: 1, col: 1, label: '', placed: false })
+  cells.push({ key: 'corner-tr', row: 1, col: cCount + 2, label: '', placed: false })
+  cells.push({ key: 'corner-bl', row: rCount + 2, col: 1, label: '', placed: false })
+  cells.push({ key: 'corner-br', row: rCount + 2, col: cCount + 2, label: '', placed: false })
+  for (let c = 0; c < cCount; c++) {
+    const t = spEdgeType('top', c)
+    cells.push({ key: 'et' + c, row: 1, col: c + 2, label: t === 'DOOR' ? '🚪' : t === 'PODIUM' ? '讲' : '', placed: !!t })
+  }
+  for (let c = 0; c < cCount; c++) {
+    const t = spEdgeType('bottom', c)
+    cells.push({ key: 'eb' + c, row: rCount + 2, col: c + 2, label: t === 'DOOR' ? '🚪' : t === 'PODIUM' ? '讲' : '', placed: !!t })
+  }
+  for (let r = 0; r < rCount; r++) {
+    const t = spEdgeType('left', r)
+    cells.push({ key: 'el' + r, row: r + 2, col: 1, label: t === 'DOOR' ? '🚪' : t === 'PODIUM' ? '讲' : '', placed: !!t })
+  }
+  for (let r = 0; r < rCount; r++) {
+    const t = spEdgeType('right', r)
+    cells.push({ key: 'er' + r, row: r + 2, col: cCount + 2, label: t === 'DOOR' ? '🚪' : t === 'PODIUM' ? '讲' : '', placed: !!t })
+  }
+  return cells
+})
 
 const maxOcc = computed(() => Math.max(1, ...frames.value.map(f => f.occupiedCount)))
 function barH(f) { return 8 + Math.round(f.occupiedCount / maxOcc.value * 46) + 'px' }
@@ -200,9 +263,20 @@ onBeforeUnmount(() => { if (timer) clearInterval(timer) })
 .heat-legend { display:flex; align-items:center; gap:14px; font-size:12px; color:#8a93a6; margin-bottom:12px; flex-wrap:wrap; }
 .heat-legend .hl { display:flex; align-items:center; gap:5px; }
 .heat-legend .hl i { width:14px; height:14px; border-radius:4px; display:inline-block; }
-.stgrid { display:inline-grid; gap:8px; }
+
+/* 统一网格：(rows+2)×(cols+2) */
+.sp-unified-grid { display: inline-grid; }
+
 .stcell { width:46px; height:46px; border-radius:9px; display:grid; place-items:center; font-size:11px; font-weight:700;
   border:1px solid rgba(0,0,0,.05); transition:transform .12s ease, box-shadow .2s ease; }
+
+/* 边缘对齐标记 */
+.sp-edge-cell {
+  display:grid; place-items:center;
+  font-size:12px; user-select:none; border-radius:6px;
+  background:#f8f6f0; border:1px dashed #ddd;
+}
+.sp-edge-cell.placed { background:#f5f0e8; border:1px solid #e0d5c0; color:#8b6914; border-style:solid; }
 .stcell.clickable { cursor:pointer; }
 .stcell.clickable:hover { transform:translateY(-3px) scale(1.08); }
 .stcell.occ { background:#ffe0e0; color:#d06; opacity:.55; }

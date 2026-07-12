@@ -38,7 +38,8 @@
 | 方法 | URL | 权限 | 说明 |
 | --- | --- | --- | --- |
 | POST | `/api/auth/login` | 公共 | 登录（密码 BCrypt 校验） |
-| POST | `/api/auth/register` | 公共 | 自助注册（默认 STUDENT，注册即登录） |
+| POST | `/api/auth/register` | 公共 | 自助注册（默认 STUDENT，注册即登录，需图形验证码） |
+| POST | `/api/auth/reset-password` | 公共 | 重置密码（用户名+姓名验证身份，需图形验证码） |
 | POST | `/api/auth/logout` | 登录 | 登出 |
 
 > **密码安全**：已实现——注册/迁移均以 **BCrypt** 存储，登录用 `matches` 校验；启动时自动将历史明文密码升级为 BCrypt。传输层仍建议部署 HTTPS。

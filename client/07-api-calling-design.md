@@ -56,7 +56,7 @@ sse/boardStream.ts
 ## 八、API 模块划分
 | 模块 | 文件 | 覆盖 |
 | --- | --- | --- |
-| auth | `api/auth.ts` | 登录/登出/me |
+| auth | `api/index.js` | 登录/注册/登出/me/验证码/重置密码 |
 | room | `api/room.ts` | 校区/楼栋/自习室/座位/board |
 | reservation | `api/reservation.ts` | 预约/签到/取消/我的 |
 | admin | `api/admin.ts` | 基础数据 CRUD/排布/黑名单 |

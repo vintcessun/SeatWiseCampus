@@ -24,8 +24,10 @@ public class NearbyController {
     public R<List<Map<String, Object>>> nearest(@RequestParam Long originBuildingId,
                                                  @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
                                                  @RequestParam @DateTimeFormat(pattern = "HH:mm") LocalTime start,
-                                                 @RequestParam @DateTimeFormat(pattern = "HH:mm") LocalTime end) {
-        return R.ok(nearbyService.nearestAvailable(originBuildingId, date, start, end));
+                                                 @RequestParam @DateTimeFormat(pattern = "HH:mm") LocalTime end,
+                                                 @RequestParam(required = false) Double userLat,
+                                                 @RequestParam(required = false) Double userLng) {
+        return R.ok(nearbyService.nearestAvailable(originBuildingId, date, start, end, userLat, userLng));
     }
 
     @SaCheckLogin

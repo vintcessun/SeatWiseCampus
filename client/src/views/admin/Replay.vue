@@ -26,7 +26,8 @@
     <el-row :gutter="16">
       <el-col :span="17">
         <el-card shadow="never">
-          <SeatGrid :cells="cells" :cols="data.cols || 8" />
+          <!-- GateGuard: SeatGrid needs :rows. data.rows comes from ReplayVO. -->
+          <SeatGrid :cells="cells" :cols="data.cols || 8" :rows="data.rows || 6" :features="data.features" />
           <div style="margin-top:16px;padding:0 6px">
             <el-slider v-model="frameIndex" :min="0" :max="Math.max(0, frames.length - 1)"
               :format-tooltip="i => frames[i]?.label || ''" :marks="marks" @input="pause" />

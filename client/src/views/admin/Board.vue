@@ -25,7 +25,8 @@
     <el-row :gutter="16">
       <el-col :span="17">
         <el-card shadow="never">
-          <SeatGrid :cells="board.seats || []" :cols="board.cols || 8" :now-ms="nowMs" :selected-seat-id="flashId" />
+          <!-- GateGuard: SeatGrid now needs :rows for edge overlay positioning. board carries rows from BoardVO. -->
+          <SeatGrid :cells="board.seats || []" :cols="board.cols || 8" :rows="board.rows || 6" :now-ms="nowMs" :selected-seat-id="flashId" :features="board.features" />
         </el-card>
       </el-col>
       <el-col :span="7">

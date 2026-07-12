@@ -6,6 +6,7 @@ import com.seatwise.common.BizError;
 import com.seatwise.common.BizException;
 import com.seatwise.dto.LoginDTO;
 import com.seatwise.dto.RegisterDTO;
+import com.seatwise.dto.ResetPasswordDTO;
 import com.seatwise.entity.User;
 import com.seatwise.mapper.UserMapper;
 import com.seatwise.vo.LoginVO;
@@ -60,6 +61,20 @@ public class AuthService {
         login.setUsername(dto.getUsername());
         login.setPassword(dto.getPassword());
         return login(login);
+    }
+
+    public void resetPassword(ResetPasswordDTO dto) {
+        if (!captchaService.validate(dto.getCaptchaId(), dto.getCaptchaCode())) {
+            throw new BizException(BizError.CAPTCHA_INVALID);
+        }
+        User user = userMapper.selectOne(new LambdaQueryWrapper<User>()
+                .eq(User::getUsername, dto.getUsername())
+                .eq(User::getRealName, dto.getRealName()));
+        if (user == null) {
+            throw new BizException(BizError.LOGIN_FAILED);
+        }
+        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+        userMapper.updateById(user);
     }
 
     public LoginVO.UserInfo me() {

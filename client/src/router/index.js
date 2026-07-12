@@ -3,7 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 const routes = [
   { path: '/', redirect: '/login' },
   { path: '/login', component: () => import('../views/Login.vue'), meta: { public: true } },
-  { path: '/register', component: () => import('../views/Register.vue'), meta: { public: true } },
+  { path: '/register', redirect: '/login' },
   {
     path: '/student',
     component: () => import('../layouts/StudentLayout.vue'),
@@ -39,6 +39,7 @@ const routes = [
       { path: 'announcements', component: () => import('../views/admin/Announcements.vue') },
       { path: 'locations', component: () => import('../views/admin/Locations.vue') },
       { path: 'blacklist', component: () => import('../views/admin/Blacklist.vue') },
+      { path: 'ranking', component: () => import('../views/student/Ranking.vue') },
       { path: 'admins', component: () => import('../views/admin/Admins.vue') }
     ]
   }

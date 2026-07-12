@@ -18,6 +18,7 @@ public class StudyRoom {
     private LocalTime openStart;
     private LocalTime openEnd;
     private String status;        // OPEN / CLOSED
+    private String features;       // JSON: {"doors":[{row,col}], "podiums":[{row,col}]}
     private BigDecimal latitude;
     private BigDecimal longitude;
     private Integer mapX;

@@ -14,11 +14,11 @@ INSERT INTO sys_user (username, password, real_name, role, credit_score, no_show
 ('student8', '123456',   '吴十',       'STUDENT', 0,  0, NOW(), NOW());
 
 INSERT INTO campus (id, name, latitude, longitude, map_x, map_y, created_time, updated_time) VALUES
-(1, '中心校区', 30.5170000, 114.4210000, 0, 0, NOW(), NOW());
+(1, '中心校区', 24.605422, 118.313908, 0, 0, NOW(), NOW());
 
 INSERT INTO building (id, campus_id, name, latitude, longitude, map_x, map_y, created_time, updated_time) VALUES
-(1, 1, '图书馆A座', 30.5175000, 114.4215000, 20,  30,  NOW(), NOW()),
-(2, 1, '第三教学楼', 30.5160000, 114.4230000, 160, 90,  NOW(), NOW());
+(1, 1, '图书馆A座', 24.605422, 118.313908, 20,  30,  NOW(), NOW()),
+(2, 1, '第三教学楼', 24.605422, 118.313908, 160, 90,  NOW(), NOW());
 
 INSERT INTO study_room (id, building_id, floor_no, name, open_start, open_end, status, map_x, map_y, created_time, updated_time) VALUES
 (1, 1, 3, 'A301 静音自习室', '08:00:00', '22:00:00', 'OPEN', 20,  30,  NOW(), NOW()),

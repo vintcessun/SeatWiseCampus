@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Leaflet 地图测试</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  body { margin:20px; font-family:sans-serif; }
+  #map { height:400px; width:700px; border-radius:8px; border:2px solid #333; }
+  .controls { margin-bottom:12px; }
+  button { padding:6px 16px; margin-right:8px; cursor:pointer; }
+  .pass { color:green; font-weight:bold; }
+  .fail { color:red; font-weight:bold; }
+</style>
+</head>
+<body>
+<h2>Leaflet 地图渲染测试</h2>
+<div class="controls">
+  <button id="btn-init">1. 直接初始化</button>
+  <button id="btn-dialog">2. 模拟 Dialog（延迟 + rAF 轮询）</button>
+  <button id="btn-osm">3. 纯 OSM 瓦片加载测试</button>
+  <span id="status">等待操作</span>
+</div>
+<div id="map"></div>
+<p>预期：显示 OSM 彩色瓦片，武汉 30.517, 114.421</p>
+
+<script>
+let map = null;
+const status = document.getElementById('status');
+
+document.getElementById('btn-init').onclick = function() {
+  destroyMap();
+  status.textContent = '初始化...';
+  status.className = '';
+  map = L.map('map', { zoomControl: true }).setView([30.5170, 114.4210], 16);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 19
+  }).addTo(map);
+  L.marker([30.5170, 114.4210]).addTo(map).bindPopup('测试点');
+  map.invalidateSize();
+  status.className = 'pass';
+  status.textContent = '✓ 地图已创建';
+};
+
+document.getElementById('btn-dialog').onclick = function() {
+  destroyMap();
+  status.textContent = '模拟 Dialog 延迟...';
+  status.className = '';
+  const el = document.getElementById('map');
+  el.style.display = 'none';
+  setTimeout(() => {
+    el.style.display = 'block';
+    const tryInit = (attempt) => {
+      const w = el.offsetWidth;
+      const h = el.offsetHeight;
+      if (w > 50 && h > 50) { doInit(); return; }
+      if (attempt < 20) requestAnimationFrame(() => tryInit(attempt + 1));
+      else doInit();
+    };
+    requestAnimationFrame(() => tryInit(0));
+  }, 500);
+};
+
+function doInit() {
+  const el = document.getElementById('map');
+  if (!el || map) return;
+  map = L.map(el, { zoomControl: true }).setView([30.5170, 114.4210], 16);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors', maxZoom: 19
+  }).addTo(map);
+  map.invalidateSize();
+  setTimeout(() => { if (map) map.invalidateSize(); }, 200);
+  L.marker([30.5170, 114.4210]).addTo(map);
+  status.className = 'pass';
+  status.textContent = '✓ 模拟 Dialog 地图已创建';
+}
+
+document.getElementById('btn-osm').onclick = function() {
+  destroyMap();
+  status.textContent = '加载 OSM 瓦片...';
+  status.className = '';
+  const img = new Image();
+  img.onload = function() { status.className = 'pass'; status.textContent = '✓ OSM 瓦片加载成功'; };
+  img.onerror = function() { status.className = 'fail'; status.textContent = '✗ OSM 瓦片加载失败（被拦截）'; };
+  img.src = 'https://tile.openstreetmap.org/16/50780/37184.png?' + Date.now();
+};
+
+function destroyMap() {
+  if (map) { map.remove(); map = null; }
+}
+</script>
+</body>
+</html>

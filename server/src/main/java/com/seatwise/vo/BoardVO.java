@@ -15,4 +15,5 @@ public class BoardVO {
     private Integer startSlot;
     private Integer endSlot;
     private List<SeatStatusVO> seats;
+    private String features;      // JSON 覆盖层（门/讲台）
 }

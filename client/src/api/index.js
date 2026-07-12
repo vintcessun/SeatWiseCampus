@@ -5,7 +5,8 @@ export const authApi = {
   register: (data) => http.post('/auth/register', data),
   logout: () => http.post('/auth/logout'),
   me: () => http.get('/users/me'),
-  captcha: () => http.get('/captcha')
+  captcha: () => http.get('/captcha'),
+  resetPassword: (data) => http.post('/auth/reset-password', data)
 }
 
 export const baseApi = {
