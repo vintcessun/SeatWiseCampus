@@ -142,10 +142,10 @@ public class BaseDataService {
         }
         // 保存门/讲台等覆盖层
         if (dto.getFeatures() != null) {
-            StudyRoom room = roomMapper.selectById(roomId);
-            if (room != null) {
-                room.setFeatures(dto.getFeatures());
-                roomMapper.updateById(room);
+            StudyRoom dbRoom = roomMapper.selectById(roomId);
+            if (dbRoom != null) {
+                dbRoom.setFeatures(dto.getFeatures());
+                roomMapper.updateById(dbRoom);
             }
         }
     }
