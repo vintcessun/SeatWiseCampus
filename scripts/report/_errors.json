@@ -1,0 +1,42 @@
+[
+  {
+    "profile": "desktop",
+    "role": "student",
+    "errors": []
+  },
+  {
+    "profile": "desktop",
+    "role": "admin",
+    "errors": []
+  },
+  {
+    "profile": "desktop-en",
+    "role": "student",
+    "errors": []
+  },
+  {
+    "profile": "desktop-en",
+    "role": "admin",
+    "errors": []
+  },
+  {
+    "profile": "ios",
+    "role": "student",
+    "errors": []
+  },
+  {
+    "profile": "ios",
+    "role": "admin",
+    "errors": []
+  },
+  {
+    "profile": "android",
+    "role": "student",
+    "errors": []
+  },
+  {
+    "profile": "android",
+    "role": "admin",
+    "errors": []
+  }
+]

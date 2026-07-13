@@ -5,6 +5,35 @@
 
 * { box-sizing: border-box; }
 html, body, #app { height: 100%; margin: 0; }
+
+/* ============ 无障碍 Accessibility ============ */
+/* 跳转到主要内容链接：平时隐藏，键盘 Tab 聚焦时显示 */
+.skip-link {
+  position: fixed; top: 8px; left: 8px; z-index: 3000;
+  padding: 8px 16px; border-radius: 8px;
+  background: var(--sw-primary); color: #fff; font-weight: 600;
+  text-decoration: none; transform: translateY(-150%);
+  transition: transform .18s ease;
+}
+.skip-link:focus { transform: translateY(0); outline: 2px solid #fff; outline-offset: 2px; }
+/* 键盘可见焦点环（鼠标点击不显示，键盘导航才显示） */
+:focus-visible {
+  outline: 2px solid var(--sw-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.el-button:focus-visible,
+.el-menu-item:focus-visible,
+.el-tabs__item:focus-visible { outline: 2px solid var(--sw-primary); outline-offset: 2px; }
+/* 尊重系统「减少动态效果」偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 body {
   font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
   background:
@@ -55,6 +84,38 @@ html.dark .alt { border-color: #2a3550; }
 html.dark .login-panel { background: radial-gradient(600px 300px at 50% -10%, rgba(91,140,255,.14), transparent 60%), #0e1220; }
 /* 平滑切换 */
 body, .el-card, .el-header { transition: background-color .35s ease, color .25s ease, border-color .35s ease; }
+
+/* ============ 移动端响应式 ============ */
+.nav-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,.45);
+  z-index: 2000; backdrop-filter: blur(1px);
+}
+.app-aside.is-mobile {
+  position: fixed; left: 0; top: 0; bottom: 0; z-index: 2001;
+  transform: translateX(-100%); transition: transform .26s ease;
+  box-shadow: 0 0 40px rgba(0,0,0,.35);
+}
+.app-aside.is-mobile.open { transform: translateX(0); }
+.header-title {
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+@media (max-width: 768px) {
+  .app-header { padding: 0 12px !important; }
+  .page { padding: 12px !important; }
+  /* 概览/首页横幅在窄屏纵向堆叠 */
+  .hero { flex-direction: column; align-items: flex-start !important; gap: 14px; }
+  .hero-stats { width: 100%; justify-content: space-around; }
+  /* 悬浮 AI 助手面板适配窄屏 */
+  .ai-panel { right: 12px !important; left: 12px !important; width: auto !important; }
+  .ai-fab { right: 16px !important; bottom: 16px !important; }
+  /* 多列栅格在窄屏纵向堆叠为单列 */
+  .el-main .el-row > .el-col {
+    flex: 0 0 100% !important; max-width: 100% !important; width: 100% !important;
+  }
+  /* 宽内容（表格等）在窄屏可横向滚动，避免撑破页面 */
+  .el-main .el-table { max-width: 100%; }
+  .header-title { max-width: 42vw; }
+}
 
 .page { padding: 20px; }
 .page-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }

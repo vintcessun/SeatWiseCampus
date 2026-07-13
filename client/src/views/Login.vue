@@ -1,90 +1,91 @@
 <template>
   <div class="login-wrap">
+    <div class="login-lang"><LanguageSwitcher /></div>
     <div class="login-hero">
       <div class="aurora a1"></div>
       <div class="aurora a2"></div>
       <div class="aurora a3"></div>
       <div class="hero-content">
         <div class="brand" style="font-size:26px"><span class="logo" style="width:44px;height:44px;font-size:24px">🎓</span> SeatWise Campus</div>
-        <h1>智能校园自习室<br/>预约管理平台</h1>
-        <p>实时座位热力图 · 时间片并发选座 · 超时释放 · 爽约黑名单 · 积分排行</p>
+        <h1>{{ $t('login.heroTitle1') }}<br/>{{ $t('login.heroTitle2') }}</h1>
+        <p>{{ $t('login.heroSubtitle') }}</p>
         <ul>
-          <li>✓ 初始化快照 + SSE 增量，多端座位状态秒级同步</li>
-          <li>✓ Redisson 锁 + MySQL 唯一索引，杜绝并发双占</li>
-          <li>✓ 候补自动补位 · 组队原子预约 · 历史回放 · AI 选座助手</li>
+          <li>{{ $t('login.feature1') }}</li>
+          <li>{{ $t('login.feature2') }}</li>
+          <li>{{ $t('login.feature3') }}</li>
         </ul>
       </div>
     </div>
     <div class="login-panel">
       <el-card class="login-card">
         <el-tabs v-model="activeTab" class="login-tabs">
-          <el-tab-pane label="登录" name="login">
+          <el-tab-pane :label="$t('login.tabLogin')" name="login">
             <el-form :model="form" @submit.prevent="submitLogin">
               <el-form-item>
-                <el-input v-model="form.username" size="large" placeholder="用户名" :prefix-icon="User" />
+                <el-input v-model="form.username" size="large" :placeholder="$t('login.username')" :prefix-icon="User" :aria-label="$t('login.username')" />
               </el-form-item>
               <el-form-item>
-                <el-input v-model="form.password" size="large" type="password" show-password placeholder="密码" :prefix-icon="Lock" @keyup.enter="submitLogin" />
+                <el-input v-model="form.password" size="large" type="password" show-password :placeholder="$t('login.password')" :prefix-icon="Lock" :aria-label="$t('login.password')" @keyup.enter="submitLogin" />
               </el-form-item>
-              <el-button type="primary" size="large" style="width:100%" :loading="loading" @click="submitLogin">登 录</el-button>
+              <el-button type="primary" size="large" style="width:100%" :loading="loading" @click="submitLogin">{{ $t('login.login') }}</el-button>
             </el-form>
-            <el-divider>演示快捷登录</el-divider>
+            <el-divider>{{ $t('login.quickLogin') }}</el-divider>
             <div style="display:flex;gap:10px;flex-wrap:wrap">
-              <el-button @click="quick('admin','admin123')">管理员 admin</el-button>
-              <el-button @click="quick('student1','123456')">学生 张三</el-button>
-              <el-button @click="quick('student2','123456')">学生 李四</el-button>
+              <el-button @click="quick('admin','admin123')">{{ $t('login.quickAdmin') }}</el-button>
+              <el-button @click="quick('student1','123456')">{{ $t('login.quickStudent1') }}</el-button>
+              <el-button @click="quick('student2','123456')">{{ $t('login.quickStudent2') }}</el-button>
             </div>
           </el-tab-pane>
 
-          <el-tab-pane label="注册" name="register">
-            <p style="color:#8a93a6;margin:0 0 16px">注册后默认为学生角色，可立即登录预约</p>
+          <el-tab-pane :label="$t('login.tabRegister')" name="register">
+            <p style="color:#8a93a6;margin:0 0 16px">{{ $t('login.registerHint') }}</p>
             <el-form :model="regForm" @submit.prevent="submitRegister">
               <el-form-item>
-                <el-input v-model="regForm.username" size="large" placeholder="用户名（3-32位）" :prefix-icon="User" />
+                <el-input v-model="regForm.username" size="large" :placeholder="$t('login.usernameRule')" :prefix-icon="User" :aria-label="$t('login.username')" />
               </el-form-item>
               <el-form-item>
-                <el-input v-model="regForm.realName" size="large" placeholder="姓名" :prefix-icon="Avatar" />
+                <el-input v-model="regForm.realName" size="large" :placeholder="$t('login.realName')" :prefix-icon="Avatar" :aria-label="$t('login.realName')" />
               </el-form-item>
               <el-form-item>
-                <el-input v-model="regForm.password" size="large" type="password" show-password placeholder="密码（至少6位）" :prefix-icon="Lock" />
+                <el-input v-model="regForm.password" size="large" type="password" show-password :placeholder="$t('login.passwordRule')" :prefix-icon="Lock" :aria-label="$t('login.password')" />
               </el-form-item>
               <el-form-item>
-                <el-input v-model="regForm.confirm" size="large" type="password" show-password placeholder="确认密码" :prefix-icon="Lock" />
+                <el-input v-model="regForm.confirm" size="large" type="password" show-password :placeholder="$t('login.confirmPassword')" :prefix-icon="Lock" :aria-label="$t('login.confirmPassword')" />
               </el-form-item>
               <el-form-item>
                 <div style="display:flex;gap:10px;width:100%;align-items:center">
-                  <el-input v-model="regForm.captchaCode" size="large" placeholder="图形验证码" :prefix-icon="Key" style="flex:1" @keyup.enter="submitRegister" />
-                  <img v-if="captcha.image" :src="captcha.image" alt="captcha" title="点击刷新"
+                  <el-input v-model="regForm.captchaCode" size="large" :placeholder="$t('login.captcha')" :prefix-icon="Key" style="flex:1" :aria-label="$t('login.captcha')" @keyup.enter="submitRegister" />
+                  <img v-if="captcha.image" :src="captcha.image" :alt="$t('login.captcha')" :title="$t('login.captchaRefresh')"
                     style="height:42px;width:120px;border-radius:6px;cursor:pointer;border:1px solid var(--el-border-color)" @click="loadCaptcha" />
                 </div>
               </el-form-item>
-              <el-button type="primary" size="large" style="width:100%" :loading="regLoading" @click="submitRegister">注 册</el-button>
+              <el-button type="primary" size="large" style="width:100%" :loading="regLoading" @click="submitRegister">{{ $t('login.register') }}</el-button>
             </el-form>
           </el-tab-pane>
 
-          <el-tab-pane label="忘记密码" name="forgot">
-            <p style="color:#8a93a6;margin:0 0 16px">验证身份后重置密码</p>
+          <el-tab-pane :label="$t('login.tabForgot')" name="forgot">
+            <p style="color:#8a93a6;margin:0 0 16px">{{ $t('login.forgotHint') }}</p>
             <el-form :model="resetForm" @submit.prevent="submitReset">
               <el-form-item>
-                <el-input v-model="resetForm.username" size="large" placeholder="用户名" :prefix-icon="User" />
+                <el-input v-model="resetForm.username" size="large" :placeholder="$t('login.username')" :prefix-icon="User" :aria-label="$t('login.username')" />
               </el-form-item>
               <el-form-item>
-                <el-input v-model="resetForm.realName" size="large" placeholder="姓名（验证身份）" :prefix-icon="Avatar" />
+                <el-input v-model="resetForm.realName" size="large" :placeholder="$t('login.realNameVerify')" :prefix-icon="Avatar" :aria-label="$t('login.realName')" />
               </el-form-item>
               <el-form-item>
-                <el-input v-model="resetForm.newPassword" size="large" type="password" show-password placeholder="新密码（至少6位）" :prefix-icon="Lock" />
+                <el-input v-model="resetForm.newPassword" size="large" type="password" show-password :placeholder="$t('login.newPassword')" :prefix-icon="Lock" :aria-label="$t('login.newPassword')" />
               </el-form-item>
               <el-form-item>
-                <el-input v-model="resetForm.confirm" size="large" type="password" show-password placeholder="确认新密码" :prefix-icon="Lock" />
+                <el-input v-model="resetForm.confirm" size="large" type="password" show-password :placeholder="$t('login.confirmNewPassword')" :prefix-icon="Lock" :aria-label="$t('login.confirmNewPassword')" />
               </el-form-item>
               <el-form-item>
                 <div style="display:flex;gap:10px;width:100%;align-items:center">
-                  <el-input v-model="resetForm.captchaCode" size="large" placeholder="图形验证码" :prefix-icon="Key" style="flex:1" @keyup.enter="submitReset" />
-                  <img v-if="captcha.image" :src="captcha.image" alt="captcha" title="点击刷新"
+                  <el-input v-model="resetForm.captchaCode" size="large" :placeholder="$t('login.captcha')" :prefix-icon="Key" style="flex:1" :aria-label="$t('login.captcha')" @keyup.enter="submitReset" />
+                  <img v-if="captcha.image" :src="captcha.image" :alt="$t('login.captcha')" :title="$t('login.captchaRefresh')"
                     style="height:42px;width:120px;border-radius:6px;cursor:pointer;border:1px solid var(--el-border-color)" @click="loadCaptcha" />
                 </div>
               </el-form-item>
-              <el-button type="primary" size="large" style="width:100%" :loading="resetLoading" @click="submitReset">重置密码</el-button>
+              <el-button type="primary" size="large" style="width:100%" :loading="resetLoading" @click="submitReset">{{ $t('login.resetPassword') }}</el-button>
             </el-form>
           </el-tab-pane>
         </el-tabs>
@@ -100,6 +101,8 @@ import { User, Lock, Avatar, Key } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '../stores/user'
 import { authApi } from '../api'
+import { t } from '../i18n'
+import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 
 const router = useRouter()
 const user = useUserStore()
@@ -110,11 +113,11 @@ const form = reactive({ username: '', password: '' })
 const loading = ref(false)
 
 async function submitLogin() {
-  if (!form.username || !form.password) { ElMessage.warning('请输入用户名和密码'); return }
+  if (!form.username || !form.password) { ElMessage.warning(t('login.msgNeedUserPass')); return }
   loading.value = true
   try {
     const data = await user.login({ ...form })
-    ElMessage.success('登录成功')
+    ElMessage.success(t('login.msgLoginSuccess'))
     router.push((data.role === 'ADMIN' || data.role === 'ADMIN_SUB') ? '/admin' : '/student')
   } catch (e) { /* 错误已由拦截器提示 */ } finally { loading.value = false }
 }
@@ -130,9 +133,9 @@ const regForm = reactive({ username: '', realName: '', password: '', confirm: ''
 const regLoading = ref(false)
 
 async function submitRegister() {
-  if (!regForm.username || !regForm.realName || !regForm.password) { ElMessage.warning('请完整填写'); return }
-  if (regForm.password !== regForm.confirm) { ElMessage.warning('两次密码不一致'); return }
-  if (!regForm.captchaCode) { ElMessage.warning('请输入图形验证码'); return }
+  if (!regForm.username || !regForm.realName || !regForm.password) { ElMessage.warning(t('login.msgFillAll')); return }
+  if (regForm.password !== regForm.confirm) { ElMessage.warning(t('login.msgPwdMismatch')); return }
+  if (!regForm.captchaCode) { ElMessage.warning(t('login.msgNeedCaptcha')); return }
   regLoading.value = true
   try {
     const data = await authApi.register({
@@ -144,7 +147,7 @@ async function submitRegister() {
     localStorage.setItem('satoken', data.token)
     localStorage.setItem('role', data.role)
     localStorage.setItem('userInfo', JSON.stringify(data.userInfo))
-    ElMessage.success('注册成功，已自动登录')
+    ElMessage.success(t('login.msgRegisterSuccess'))
     router.push('/student')
   } catch (e) { loadCaptcha() } finally { regLoading.value = false }
 }
@@ -154,9 +157,9 @@ const resetForm = reactive({ username: '', realName: '', newPassword: '', confir
 const resetLoading = ref(false)
 
 async function submitReset() {
-  if (!resetForm.username || !resetForm.realName || !resetForm.newPassword) { ElMessage.warning('请完整填写'); return }
-  if (resetForm.newPassword !== resetForm.confirm) { ElMessage.warning('两次密码不一致'); return }
-  if (!resetForm.captchaCode) { ElMessage.warning('请输入图形验证码'); return }
+  if (!resetForm.username || !resetForm.realName || !resetForm.newPassword) { ElMessage.warning(t('login.msgFillAll')); return }
+  if (resetForm.newPassword !== resetForm.confirm) { ElMessage.warning(t('login.msgPwdMismatch')); return }
+  if (!resetForm.captchaCode) { ElMessage.warning(t('login.msgNeedCaptcha')); return }
   resetLoading.value = true
   try {
     await authApi.resetPassword({
@@ -164,7 +167,7 @@ async function submitReset() {
       newPassword: resetForm.newPassword,
       captchaId: captcha.captchaId, captchaCode: resetForm.captchaCode
     })
-    ElMessage.success('密码重置成功，请重新登录')
+    ElMessage.success(t('login.msgResetSuccess'))
     resetForm.username = ''; resetForm.realName = ''; resetForm.newPassword = ''; resetForm.confirm = ''; resetForm.captchaCode = ''
     activeTab.value = 'login'
   } catch (e) { loadCaptcha() } finally { resetLoading.value = false }
@@ -193,7 +196,8 @@ watch(activeTab, (tab) => {
 </script>
 
 <style scoped>
-.login-wrap { display:flex; height:100vh; }
+.login-wrap { display:flex; height:100vh; position:relative; }
+.login-lang { position:absolute; top:18px; right:20px; z-index:10; }
 .login-hero {
   flex:1; position:relative; overflow:hidden; color:#fff;
   background:linear-gradient(135deg,#2f52d8,#6f45e6 55%,#8f5bff);

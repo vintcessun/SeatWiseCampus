@@ -2,17 +2,17 @@
   <div class="page">
     <div class="hero">
       <div>
-        <div class="hero-hi">管理控制台概览 📊</div>
-        <div class="hero-sub">SeatWise · 实时掌握自习室运行状况</div>
+        <div class="hero-hi">{{ $t('dash.title') }}</div>
+        <div class="hero-sub">{{ $t('dash.subtitle') }}</div>
       </div>
-      <el-button class="hero-refresh" :icon="Refresh" :loading="loading" round @click="load">刷新数据</el-button>
+      <el-button class="hero-refresh" :icon="Refresh" :loading="loading" round @click="load">{{ $t('dash.refresh') }}</el-button>
     </div>
 
     <el-row :gutter="16" style="margin-bottom:16px">
-      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#eef4ff">🏫</div><div><div class="ov-v"><CountUp :value="rooms.length" /></div><div class="ov-k">自习室数</div></div></div></el-card></el-col>
-      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#eafaf0">📅</div><div><div class="ov-v"><CountUp :value="data.total || 0" /></div><div class="ov-k">总预约数</div></div></div></el-card></el-col>
-      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#e9f0ff">↩️</div><div><div class="ov-v" style="color:#3b6cff"><CountUp :value="data.cancelRate || 0" />%</div><div class="ov-k">取消率</div></div></div></el-card></el-col>
-      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#ffefef">⚠️</div><div><div class="ov-v" style="color:#d64545"><CountUp :value="data.noShowRate || 0" />%</div><div class="ov-k">爽约率</div></div></div></el-card></el-col>
+      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#eef4ff">🏫</div><div><div class="ov-v"><CountUp :value="rooms.length" /></div><div class="ov-k">{{ $t('dash.roomCount') }}</div></div></div></el-card></el-col>
+      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#eafaf0">📅</div><div><div class="ov-v"><CountUp :value="data.total || 0" /></div><div class="ov-k">{{ $t('dash.totalRes') }}</div></div></div></el-card></el-col>
+      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#e9f0ff">↩️</div><div><div class="ov-v" style="color:#3b6cff"><CountUp :value="data.cancelRate || 0" />%</div><div class="ov-k">{{ $t('dash.cancelRate') }}</div></div></div></el-card></el-col>
+      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#ffefef">⚠️</div><div><div class="ov-v" style="color:#d64545"><CountUp :value="data.noShowRate || 0" />%</div><div class="ov-k">{{ $t('dash.noShowRate') }}</div></div></div></el-card></el-col>
     </el-row>
 
     <el-row :gutter="16">
@@ -21,22 +21,22 @@
       </el-col>
       <el-col :span="8">
         <el-card shadow="never">
-          <div class="card-title">自习室实时空位</div>
+          <div class="card-title">{{ $t('dash.liveVacancy') }}</div>
           <div v-for="r in roomLive" :key="r.id" class="rl">
             <span class="rl-name">{{ r.name }}</span>
             <el-progress :percentage="r.pct" :color="r.pct > 50 ? '#1f9d55' : r.pct > 20 ? '#d98a00' : '#d64545'" :stroke-width="10" style="flex:1" />
-            <span class="rl-num">{{ r.free }} 空</span>
+            <span class="rl-num">{{ $t('dash.free', { n: r.free }) }}</span>
           </div>
         </el-card>
       </el-col>
       <el-col :span="6">
         <el-card shadow="never">
-          <div class="card-title">快捷入口</div>
+          <div class="card-title">{{ $t('dash.quickEntry') }}</div>
           <div class="quick">
-            <div class="q" @click="$router.push('/admin/rooms')"><span>🏫</span>自习室座位</div>
-            <div class="q" @click="$router.push('/admin/students')"><span>👤</span>学生追踪</div>
-            <div class="q" @click="$router.push('/admin/reports')"><span>📈</span>数据报表</div>
-            <div class="q" @click="$router.push('/admin/blacklist')"><span>⚠️</span>黑名单</div>
+            <div class="q" role="button" tabindex="0" @click="$router.push('/admin/rooms')" @keyup.enter="$router.push('/admin/rooms')"><span>🏫</span>{{ $t('dash.qRooms') }}</div>
+            <div class="q" role="button" tabindex="0" @click="$router.push('/admin/students')" @keyup.enter="$router.push('/admin/students')"><span>👤</span>{{ $t('dash.qStudents') }}</div>
+            <div class="q" role="button" tabindex="0" @click="$router.push('/admin/reports')" @keyup.enter="$router.push('/admin/reports')"><span>📈</span>{{ $t('dash.qReports') }}</div>
+            <div class="q" role="button" tabindex="0" @click="$router.push('/admin/blacklist')" @keyup.enter="$router.push('/admin/blacklist')"><span>⚠️</span>{{ $t('dash.qBlacklist') }}</div>
           </div>
         </el-card>
       </el-col>
@@ -51,13 +51,14 @@ import { Refresh } from '@element-plus/icons-vue'
 import { reportApi, baseApi, boardApi } from '../../api'
 import { todayLocal } from '../../utils/date'
 import CountUp from '../../components/CountUp.vue'
+import { t } from '../../i18n'
 
 const data = reactive({})
 const rooms = ref([])
 const roomLive = ref([])
 const pieEl = ref()
 const loading = ref(false)
-const statusLabel = { PENDING_SIGN_IN: '待签到', IN_USE: '使用中', COMPLETED: '已完成', CANCELLED: '已取消', EXPIRED_RELEASED: '爽约释放' }
+const statusLabel = (k) => t('status.' + k)
 
 onMounted(load)
 async function load() {
@@ -87,9 +88,9 @@ function renderPie() {
   const chart = echarts.init(pieEl.value)
   const sd = data.statusDistribution || {}
   chart.setOption({
-    title: { text: '预约状态分布', left: 'center', textStyle: { fontSize: 14 } },
+    title: { text: t('dash.pieTitle'), left: 'center', textStyle: { fontSize: 14 } },
     tooltip: { trigger: 'item' }, legend: { bottom: 0 },
-    series: [{ type: 'pie', radius: ['42%', '68%'], center: ['50%', '46%'], data: Object.keys(sd).map(k => ({ name: statusLabel[k] || k, value: sd[k] })) }]
+    series: [{ type: 'pie', radius: ['42%', '68%'], center: ['50%', '46%'], data: Object.keys(sd).map(k => ({ name: statusLabel(k), value: sd[k] })) }]
   })
 }
 </script>

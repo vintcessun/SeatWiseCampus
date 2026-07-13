@@ -1,20 +1,20 @@
 <template>
   <span>
     <el-badge :value="unread" :hidden="unread === 0" :max="99">
-      <el-button circle :icon="Bell" @click="openDrawer" />
+      <el-button circle :icon="Bell" :aria-label="$t('noti.bell')" @click="openDrawer" />
     </el-badge>
 
-    <el-drawer v-model="drawer" title="站内通知" size="380px">
+    <el-drawer v-model="drawer" :title="$t('noti.title')" size="380px">
       <template #header>
         <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
-          <span style="font-weight:700">站内通知</span>
-          <el-button link type="primary" size="small" @click="readAll" :disabled="unread===0">全部已读</el-button>
+          <span style="font-weight:700">{{ $t('noti.title') }}</span>
+          <el-button link type="primary" size="small" @click="readAll" :disabled="unread===0">{{ $t('noti.readAll') }}</el-button>
         </div>
       </template>
 
       <!-- 公告横幅（独立于通知列表，与 Home.vue 一致） -->
       <div v-if="announcements.length" style="margin-bottom:12px">
-        <div style="font-size:12px;font-weight:700;color:#8a93a6;padding:0 4px 6px">📢 公告</div>
+        <div style="font-size:12px;font-weight:700;color:#8a93a6;padding:0 4px 6px">📢 {{ $t('noti.announce') }}</div>
         <el-alert v-for="a in announcements" :key="a.id" :type="a.level === 'WARN' ? 'warning' : 'info'"
           :closable="false" show-icon style="margin-bottom:8px">
           <template #title>
@@ -26,7 +26,7 @@
       </div>
 
       <!-- 其他通知列表 -->
-      <div v-if="!notifications.length" style="color:#8a93a6;text-align:center;margin-top:24px">暂无通知</div>
+      <div v-if="!notifications.length" style="color:#8a93a6;text-align:center;margin-top:24px">{{ $t('noti.empty') }}</div>
       <div v-for="n in notifications" :key="n.id" class="noti" :class="{ unread: !n.readFlag }" @click="read(n)">
         <div class="noti-side">{{ typeIcon(n.type) }}</div>
         <div style="flex:1;min-width:0">

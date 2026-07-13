@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- 悬浮按钮 -->
-    <div class="ai-fab" @click="open = !open" :class="{ active: open }">
+    <div class="ai-fab" role="button" tabindex="0" :aria-label="open ? $t('ai.close') : $t('ai.fab')" @click="open = !open" @keyup.enter="open = !open" :class="{ active: open }">
       <span v-if="!open">🤖</span><span v-else>✕</span>
     </div>
 
@@ -10,16 +10,16 @@
       <div v-if="open" class="ai-panel">
         <div class="ai-head">
           <div>
-            <div class="ai-title">AI 智能选座助手</div>
-            <div class="ai-sub">说出你的需求，帮你找到最合适的座位</div>
+            <div class="ai-title">{{ $t('ai.title') }}</div>
+            <div class="ai-sub">{{ $t('ai.subtitle') }}</div>
           </div>
           <el-tag size="small" :type="lastSource==='llm'?'success':'info'" effect="plain">
-            {{ lastSource==='llm' ? '大模型' : '规则引擎' }}
+            {{ lastSource==='llm' ? $t('ai.llm') : $t('ai.rule') }}
           </el-tag>
         </div>
 
         <div class="ai-body" ref="bodyEl">
-          <div class="ai-msg bot">你好！我可以按时间、时长、靠窗/插座/安静等偏好帮你推荐座位。试试下面的例子👇</div>
+          <div class="ai-msg bot">{{ $t('ai.greeting') }}</div>
           <div class="ai-examples">
             <span v-for="ex in examples" :key="ex" class="ai-chip" @click="send(ex)">{{ ex }}</span>
           </div>
@@ -31,25 +31,25 @@
               <div v-if="m.recs && m.recs.length" class="ai-recs">
                 <div v-for="(r, idx) in m.recs" :key="r.seatId" class="ai-rec" @click="go(r)">
                   <div class="ai-rec-top">
-                    <span class="ai-rec-rank">{{ idx===0 ? '⭐ 首选' : '备选'+idx }}</span>
+                    <span class="ai-rec-rank">{{ idx===0 ? $t('ai.first') : $t('ai.alt')+idx }}</span>
                     <b>{{ r.roomName }} · {{ r.seatNo }}</b>
                   </div>
                   <div class="ai-rec-tags">
                     <span v-for="t in r.tags" :key="t" class="ai-tag">{{ tagCn(t) }}</span>
                   </div>
                   <div class="ai-rec-reason">{{ r.reasons.join('，') }}</div>
-                  <div class="ai-rec-go">前往预约 →</div>
+                  <div class="ai-rec-go">{{ $t('ai.goBook') }}</div>
                 </div>
               </div>
             </div>
           </template>
-          <div v-if="loading" class="ai-msg bot">正在思考…</div>
+          <div v-if="loading" class="ai-msg bot">{{ $t('ai.thinking') }}</div>
         </div>
 
         <div class="ai-input">
-          <el-input v-model="text" placeholder="例如：明天上午找个安静靠窗的位置坐3小时"
+          <el-input v-model="text" :placeholder="$t('ai.placeholder')" :aria-label="$t('ai.title')"
                     @keyup.enter="send()" :disabled="loading" />
-          <el-button type="primary" :loading="loading" @click="send()">发送</el-button>
+          <el-button type="primary" :loading="loading" @click="send()">{{ $t('ai.send') }}</el-button>
         </div>
       </div>
     </transition>
@@ -57,10 +57,11 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { aiApi } from '../api'
 import { tagCn } from '../constants/seatTags'
+import { t } from '../i18n'
 
 const router = useRouter()
 const open = ref(false)
@@ -69,11 +70,7 @@ const loading = ref(false)
 const history = ref([])
 const lastSource = ref('rule')
 const bodyEl = ref(null)
-const examples = [
-  '下午2点安静靠窗坐两小时',
-  '找个有插座、人少的位置',
-  '图书馆里能连续坐3小时的座位'
-]
+const examples = computed(() => [t('ai.ex1'), t('ai.ex2'), t('ai.ex3')])
 
 async function send(preset) {
   const q = (preset ?? text.value).trim()
@@ -85,7 +82,7 @@ async function send(preset) {
     lastSource.value = data.source
     history.value.push({ q, reply: data.reply, recs: data.recommendations || [] })
   } catch (e) {
-    history.value.push({ q, reply: '抱歉，暂时无法给出推荐，请稍后再试。', recs: [] })
+    history.value.push({ q, reply: t('ai.errorReply'), recs: [] })
   } finally {
     loading.value = false
     await nextTick()

@@ -3,12 +3,12 @@
     <!-- 欢迎横幅 -->
     <div class="hero">
       <div>
-        <div class="hero-hi">你好，{{ user.userInfo?.realName }} 👋</div>
-        <div class="hero-sub">欢迎来到 SeatWise · 今天也要高效自习哦</div>
+        <div class="hero-hi">{{ $t('home.greeting', { name: user.userInfo?.realName }) }}</div>
+        <div class="hero-sub">{{ $t('home.welcome') }}</div>
       </div>
       <div class="hero-stats">
-        <div class="hero-stat"><div class="v"><CountUp :value="user.userInfo?.creditScore ?? 0" /></div><div class="k">信用积分</div></div>
-        <div class="hero-stat"><div class="v">{{ myRank || '-' }}</div><div class="k">积分排名</div></div>
+        <div class="hero-stat"><div class="v"><CountUp :value="user.userInfo?.creditScore ?? 0" /></div><div class="k">{{ $t('home.creditScore') }}</div></div>
+        <div class="hero-stat"><div class="v">{{ myRank || '-' }}</div><div class="k">{{ $t('home.rankNo') }}</div></div>
       </div>
     </div>
 
@@ -24,41 +24,41 @@
 
     <!-- 概览卡片 -->
     <el-row :gutter="16" style="margin-bottom:16px">
-      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#eef4ff">📅</div><div><div class="ov-v"><CountUp :value="stat.today" /></div><div class="ov-k">今日预约</div></div></div></el-card></el-col>
-      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#ffefef">🪑</div><div><div class="ov-v"><CountUp :value="stat.inUse" /></div><div class="ov-k">进行中</div></div></div></el-card></el-col>
-      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#eafaf0">✅</div><div><div class="ov-v"><CountUp :value="stat.completed" /></div><div class="ov-k">累计完成</div></div></div></el-card></el-col>
-      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#fff6e0">⚠️</div><div><div class="ov-v"><CountUp :value="user.userInfo?.noShowCount ?? 0" /></div><div class="ov-k">爽约次数</div></div></div></el-card></el-col>
+      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#eef4ff">📅</div><div><div class="ov-v"><CountUp :value="stat.today" /></div><div class="ov-k">{{ $t('home.today') }}</div></div></div></el-card></el-col>
+      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#ffefef">🪑</div><div><div class="ov-v"><CountUp :value="stat.inUse" /></div><div class="ov-k">{{ $t('home.inUse') }}</div></div></div></el-card></el-col>
+      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#eafaf0">✅</div><div><div class="ov-v"><CountUp :value="stat.completed" /></div><div class="ov-k">{{ $t('home.completed') }}</div></div></div></el-card></el-col>
+      <el-col :span="6"><el-card shadow="never"><div class="ov"><div class="ic" style="background:#fff6e0">⚠️</div><div><div class="ov-v"><CountUp :value="user.userInfo?.noShowCount ?? 0" /></div><div class="ov-k">{{ $t('home.noShow') }}</div></div></div></el-card></el-col>
     </el-row>
 
     <el-row :gutter="16">
       <el-col :span="14">
         <el-card shadow="never">
-          <div class="card-title">即将开始 / 进行中</div>
+          <div class="card-title">{{ $t('home.upcoming') }}</div>
           <el-table :data="upcoming" style="width:100%" v-if="upcoming.length">
-            <el-table-column prop="roomName" label="自习室" />
-            <el-table-column prop="seatNo" label="座位" width="80" />
-            <el-table-column label="时段" width="140"><template #default="{ row }">{{ row.date }} {{ row.startTime }}-{{ row.endTime }}</template></el-table-column>
-            <el-table-column label="状态" width="100"><template #default="{ row }"><el-tag :type="row.status==='IN_USE'?'danger':'warning'">{{ row.status==='IN_USE'?'使用中':'待签到' }}</el-tag></template></el-table-column>
+            <el-table-column prop="roomName" :label="$t('home.colRoom')" />
+            <el-table-column prop="seatNo" :label="$t('home.colSeat')" width="80" />
+            <el-table-column :label="$t('home.colTime')" width="140"><template #default="{ row }">{{ row.date }} {{ row.startTime }}-{{ row.endTime }}</template></el-table-column>
+            <el-table-column :label="$t('home.colStatus')" width="100"><template #default="{ row }"><el-tag :type="row.status==='IN_USE'?'danger':'warning'">{{ row.status==='IN_USE'?$t('home.statusUsing'):$t('home.statusPending') }}</el-tag></template></el-table-column>
           </el-table>
-          <el-empty v-else description="暂无待办预约" :image-size="70" />
+          <el-empty v-else :description="$t('home.noPending')" :image-size="70" />
         </el-card>
       </el-col>
       <el-col :span="10">
         <el-card shadow="never" style="margin-bottom:16px">
-          <div class="card-title">快捷操作</div>
+          <div class="card-title">{{ $t('home.quickActions') }}</div>
           <div class="quick">
-            <div class="q" @click="$router.push('/student/rooms')"><span>🔍</span>选座预约</div>
-            <div class="q" @click="$router.push('/student/nearby')"><span>📍</span>附近空位</div>
-            <div class="q" @click="$router.push('/student/reservations')"><span>📋</span>我的预约</div>
-            <div class="q" @click="$router.push('/student/ranking')"><span>🏆</span>积分排行</div>
+            <div class="q" role="button" tabindex="0" @click="$router.push('/student/rooms')" @keyup.enter="$router.push('/student/rooms')"><span>🔍</span>{{ $t('home.qBook') }}</div>
+            <div class="q" role="button" tabindex="0" @click="$router.push('/student/nearby')" @keyup.enter="$router.push('/student/nearby')"><span>📍</span>{{ $t('home.qNearby') }}</div>
+            <div class="q" role="button" tabindex="0" @click="$router.push('/student/reservations')" @keyup.enter="$router.push('/student/reservations')"><span>📋</span>{{ $t('home.qMine') }}</div>
+            <div class="q" role="button" tabindex="0" @click="$router.push('/student/ranking')" @keyup.enter="$router.push('/student/ranking')"><span>🏆</span>{{ $t('home.qRanking') }}</div>
           </div>
         </el-card>
         <el-card shadow="never">
-          <div class="card-title">积分排行 · 前五</div>
+          <div class="card-title">{{ $t('home.topRank') }}</div>
           <div v-for="(r, i) in topRank" :key="r.userId" class="rk" :class="{ me: r.userId === user.userInfo?.id }">
             <span class="rk-no">{{ trophy(i + 1) }}{{ i + 1 }}</span>
-            <span class="rk-name">{{ r.realName }}{{ r.userId === user.userInfo?.id ? '（我）' : '' }}</span>
-            <span class="rk-score">{{ r.creditScore }} 分</span>
+            <span class="rk-name">{{ r.realName }}{{ r.userId === user.userInfo?.id ? $t('home.me') : '' }}</span>
+            <span class="rk-score">{{ $t('home.points', { n: r.creditScore }) }}</span>
           </div>
         </el-card>
       </el-col>

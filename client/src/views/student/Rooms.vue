@@ -1,20 +1,20 @@
 <template>
   <div class="page">
-    <div class="page-title">选座预约</div>
-    <div class="page-sub">按 校区 → 楼栋 → 楼层 筛选自习室，进入后选择时间片与座位</div>
+    <div class="page-title">{{ $t('rooms.title') }}</div>
+    <div class="page-sub">{{ $t('rooms.subtitle') }}</div>
 
     <el-card shadow="never" style="margin-bottom:16px">
       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-        <el-select v-model="campusId" placeholder="校区" style="width:180px" @change="onCampus">
+        <el-select v-model="campusId" :placeholder="$t('rooms.campus')" style="width:180px" @change="onCampus">
           <el-option v-for="c in campuses" :key="c.id" :label="c.name" :value="c.id" />
         </el-select>
-        <el-select v-model="buildingId" placeholder="楼栋" style="width:180px" @change="onBuilding" clearable>
+        <el-select v-model="buildingId" :placeholder="$t('rooms.building')" style="width:180px" @change="onBuilding" clearable>
           <el-option v-for="b in buildings" :key="b.id" :label="b.name" :value="b.id" />
         </el-select>
-        <el-select v-model="floorNo" placeholder="楼层" style="width:140px" @change="loadRooms" clearable>
-          <el-option v-for="f in floors" :key="f" :label="f + ' 楼'" :value="f" />
+        <el-select v-model="floorNo" :placeholder="$t('rooms.floor')" style="width:140px" @change="loadRooms" clearable>
+          <el-option v-for="f in floors" :key="f" :label="$t('rooms.floorN', { n: f })" :value="f" />
         </el-select>
-        <el-button type="primary" :icon="Search" @click="loadRooms">查询</el-button>
+        <el-button type="primary" :icon="Search" @click="loadRooms">{{ $t('rooms.search') }}</el-button>
       </div>
     </el-card>
 
@@ -25,16 +25,16 @@
             <div>
               <div style="font-size:16px;font-weight:700">{{ room.name }}</div>
               <div style="color:#8a93a6;font-size:13px;margin-top:6px">
-                {{ buildingName(room.buildingId) }} · {{ room.floorNo }} 楼
+                {{ buildingName(room.buildingId) }} · {{ $t('rooms.floorN', { n: room.floorNo }) }}
               </div>
-              <div style="color:#8a93a6;font-size:13px">开放 {{ fmt(room.openStart) }} - {{ fmt(room.openEnd) }}</div>
+              <div style="color:#8a93a6;font-size:13px">{{ $t('rooms.openLabel') }} {{ fmt(room.openStart) }} - {{ fmt(room.openEnd) }}</div>
             </div>
-            <el-tag :type="room.status==='OPEN'?'success':'info'">{{ room.status==='OPEN'?'开放':'关闭' }}</el-tag>
+            <el-tag :type="room.status==='OPEN'?'success':'info'">{{ room.status==='OPEN'?$t('rooms.open'):$t('rooms.closed') }}</el-tag>
           </div>
-          <el-button type="primary" plain style="width:100%;margin-top:14px" @click="enter(room)">进入选座</el-button>
+          <el-button type="primary" plain style="width:100%;margin-top:14px" @click="enter(room)">{{ $t('rooms.enter') }}</el-button>
         </el-card>
       </el-col>
-      <el-empty v-if="!rooms.length" description="暂无自习室，请调整筛选条件" style="width:100%" />
+      <el-empty v-if="!rooms.length" :description="$t('rooms.empty')" style="width:100%" />
     </el-row>
   </div>
 </template>
