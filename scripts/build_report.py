@@ -95,6 +95,83 @@ def _shade(cell, hexcolor):
     tcPr.append(shd)
 
 
+def _code_font(run):
+    run.font.size = Pt(9)
+    rPr = run._element.get_or_add_rPr()
+    rF = rPr.find(qn("w:rFonts"))
+    if rF is None:
+        rF = OxmlElement("w:rFonts"); rPr.append(rF)
+    rF.set(qn("w:ascii"), "Consolas")
+    rF.set(qn("w:hAnsi"), "Consolas")
+    rF.set(qn("w:eastAsia"), "宋体")
+
+
+# ---------- 封面（项目组名 / 选题 / 成员） ----------
+MEMBERS = [
+    ("王子恒", "34520242201240", "总负责、代码"),
+    ("林俊豪", "22920242203293", "端到端测试"),
+    ("林润宸", "22920242203296", "代码"),
+    ("吕宜家", "22920242203340", "前端测试、PPT 制作"),
+    ("谭嘉亮", "22920242203390", "后端测试、PPT 制作"),
+    ("叶雨扬", "22920242203485", "安卓端、苹果端测试"),
+    ("莫岢毅", "22920242203354", "代码"),
+]
+GROUP_NAME = "大梦一瓜"
+TOPIC = "题目二　智能校园自习室预约管理平台"
+
+
+def _set_text(par, text, size=14, bold=False):
+    for r in list(par.runs):
+        r._element.getparent().remove(r._element)
+    run = par.add_run(text)
+    run.font.name = BODY_FONT
+    run.font.size = Pt(size)
+    run.font.bold = bold
+    _ea(run, BODY_FONT)
+
+
+def _append_text(par, text, bold=True):
+    ref_size = None
+    if par.runs and par.runs[-1].font.size:
+        ref_size = par.runs[-1].font.size
+    run = par.add_run(text)
+    run.font.name = BODY_FONT
+    run.font.bold = bold
+    if ref_size:
+        run.font.size = ref_size
+    _ea(run, BODY_FONT)
+
+
+def fill_title(doc):
+    from copy import deepcopy
+    name_slots = []
+    for ch in list(doc.element.body.iterchildren()):
+        if not ch.tag.endswith("}p"):
+            continue
+        par = Paragraph(ch, doc._body)
+        t = par.text.strip()
+        if t == "课程项目":
+            nxt = ch.getnext()
+            if nxt is not None and nxt.tag.endswith("}p"):
+                _set_text(Paragraph(nxt, doc._body), TOPIC, size=15, bold=True)
+        elif t.replace(" ", "") == "项目组":
+            _append_text(par, f"　（{GROUP_NAME}）")
+        elif t == "姓名学号":
+            name_slots.append(par)
+    for i, par in enumerate(name_slots):
+        if i < len(MEMBERS):
+            _set_text(par, f"{MEMBERS[i][0]}    {MEMBERS[i][1]}", size=14)
+        else:
+            _set_text(par, "", size=14)
+    if name_slots:
+        last = name_slots[-1]._p
+        for j in range(len(name_slots), len(MEMBERS)):
+            newp = deepcopy(last)
+            last.addnext(newp)
+            last = newp
+            _set_text(Paragraph(newp, doc._body), f"{MEMBERS[j][0]}    {MEMBERS[j][1]}", size=14)
+
+
 class Cursor:
     def __init__(self, doc, anchor_p, images_only):
         self.doc = doc
@@ -169,6 +246,36 @@ class Cursor:
         self.image(imgfile)
         self.caption(f"{next_fig()}    {name}")
 
+    def code(self, label, text):
+        """核心代码块（带浅底纹与边框的等宽代码）。"""
+        if label:
+            lab = self._add_p_after()
+            lab.paragraph_format.space_before = Pt(4)
+            lab.paragraph_format.space_after = Pt(2)
+            _fmt(lab.add_run("核心代码：" + label), font=BODY_FONT, size=10.5, bold=True, color="1F3864")
+        para = self._add_p_after()
+        para.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        para.paragraph_format.left_indent = Pt(10)
+        para.paragraph_format.space_after = Pt(8)
+        para.paragraph_format.line_spacing = 1.05
+        pPr = para._p.get_or_add_pPr()
+        shd = OxmlElement("w:shd"); shd.set(qn("w:val"), "clear"); shd.set(qn("w:fill"), "F5F6FA")
+        pPr.append(shd)
+        pbdr = OxmlElement("w:pBdr")
+        for edge in ("top", "left", "bottom", "right"):
+            e = OxmlElement("w:" + edge)
+            e.set(qn("w:val"), "single"); e.set(qn("w:sz"), "4")
+            e.set(qn("w:space"), "4"); e.set(qn("w:color"), "D0D5DD")
+            pbdr.append(e)
+        pPr.append(pbdr)
+        lines = text.strip("\n").split("\n")
+        for i, ln in enumerate(lines):
+            r = para.add_run(ln if ln else " ")
+            _code_font(r)
+            if i < len(lines) - 1:
+                r.add_break()
+        return para
+
     def table(self, header, rows, title, col_w=None):
         cap = self._add_p_after()
         cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -226,12 +333,13 @@ def delete_after_until_sectpr(start_el):
 
 # ============================================================ 各部分内容
 def build_photo(c):
-    c.body("本项目由项目组共同完成，成员及主要分工如下表所示。")
+    c.body(f"本项目为《Java 程序设计实践》课程项目，项目组名称为“{GROUP_NAME}”，选题为“{TOPIC}”。"
+           f"项目由项目组 {len(MEMBERS)} 名成员共同完成，成员及主要分工如下表所示。")
     c.table(
         ["姓名", "学号", "主要分工"],
-        [["", "", ""] for _ in range(5)],
+        [[m[0], m[1], m[2]] for m in MEMBERS],
         "项目成员与分工",
-        col_w=[3.5, 4.5, 7.4],
+        col_w=[3.0, 5.0, 7.4],
     )
     # 合影占位
     ph = c._add_p_after()
@@ -242,7 +350,7 @@ def build_photo(c):
 
 
 def build_goal(c):
-    c.body("本项目旨在构建一套面向高校多校区、多楼栋、多楼层场景的 C/S 架构自习室在线预约系统 —— SeatWise Campus，"
+    c.body(f"本项目选题为“{TOPIC}”，旨在构建一套面向高校多校区、多楼栋、多楼层场景的 C/S 架构自习室在线预约系统 —— SeatWise Campus，"
            "解决“空位不透明、线下占座、到场无座、使用率难统计、状态更新滞后、爽约不公平”等痛点，"
            "让学生能方便地找到并锁定空位、让管理员掌握使用情况、用规则保障使用公平。")
     c.sub("（一）功能目标", 12.5)
@@ -434,6 +542,46 @@ TEST_TABLE = (
 )
 
 
+CODE_SLOT = """// slotIndex = (hour*60+minute)/slotMinutes，从 00:00 起（30 分钟片时 14:00->28）
+public static int toSlot(LocalTime time, int slotMinutes) {
+    return (time.getHour() * 60 + time.getMinute()) / slotMinutes;
+}
+// 将预约区间 [startSlot, endSlot) 展开为占用的时间片序号列表
+public static List<Integer> expand(int startSlot, int endSlot) {
+    List<Integer> list = new ArrayList<>();
+    for (int i = startSlot; i < endSlot; i++) list.add(i);
+    return list;
+}"""
+
+CODE_RESERVE = """// Redisson 加锁降低冲突（锁失败或失效仍由数据库唯一索引兜底）
+RLock lock = redisson.getLock("seat:"+seatId+":date:"+date+":slots:"+startSlot+"-"+endSlot);
+boolean locked = lock.tryLock(3, 10, TimeUnit.SECONDS);
+try {
+    reservation = tx.execute(status -> {          // 同一事务内写入
+        Reservation r = new Reservation(userId, seatId, roomId, date, startSlot, endSlot);
+        r.setStatus("PENDING_SIGN_IN");
+        reservationMapper.insert(r);
+        for (Integer s : slots) {                 // 逐片插入占用记录
+            slotMapper.insert(new ReservationSlot(r.getId(), seatId, date, s));
+        }                                         // 命中 uk(seat_id,date,slot_index) 即冲突
+        return r;
+    });
+} catch (DuplicateKeyException e) {               // 并发双占被数据库原子拒绝
+    throw new BizException(BizError.SEAT_ALREADY_RESERVED);
+} finally {
+    if (locked && lock.isHeldByCurrentThread()) lock.unlock();
+}"""
+
+CODE_SSE = """// 座位状态变更后，向所有订阅该看板的客户端广播增量事件
+private void broadcastSeat(Long roomId, LocalDate date, Long seatId,
+                          String status, String event) {
+    Map<String, Object> payload = new HashMap<>();
+    payload.put("seatId", seatId);
+    payload.put("status", status);        // FREE / RESERVED / USING
+    sse.broadcast(roomId, date, event, payload);   // event 如 seat_reserved
+}"""
+
+
 def build_design(c):
     c.body("本部分从总体架构、数据库、并发模型、核心流程、状态机、实时看板、超时释放、部署与接口九个方面阐述系统设计。"
            "系统的两大技术核心是“时间片并发选座的正确性”与“多客户端实时看板的一致性”，其余设计均围绕二者展开。")
@@ -443,6 +591,16 @@ def build_design(c):
         c.figure(img, name)
         if title.startswith("2.2"):
             c.table(DB_TABLE[0], DB_TABLE[1], DB_TABLE[2], col_w=[3.2, 2.4, 1.6, 5.0, 3.2])
+        elif title.startswith("2.3"):
+            c.body("时间片换算与拆分的核心代码如下：slotIndex 由“(时*60+分)/片长”计算，预约区间按 [起, 止) 展开为片序号列表。")
+            c.code("时间片换算与拆分（SlotUtil）", CODE_SLOT)
+        elif title.startswith("2.4"):
+            c.body("并发预约的核心代码如下：先用 Redisson 加锁降低冲突，再在同一事务内插入主记录与逐片占用记录；"
+                   "一旦命中唯一索引即抛出 DuplicateKeyException 并回滚，返回“座位已被预约”，从而保证绝不双占。")
+            c.code("并发预约与唯一索引兜底（ReservationService）", CODE_RESERVE)
+        elif title.startswith("2.6"):
+            c.body("座位状态变更后广播 SSE 增量事件的核心代码如下：")
+            c.code("SSE 增量广播（ReservationService）", CODE_SSE)
     c.sub("2.9  核心接口概览")
     c.body("前后端通过 REST 接口与 SSE 通道交互，统一响应结构为 code/message/data/traceId。核心接口一览见下表。")
     c.table(API_TABLE[0], API_TABLE[1], API_TABLE[2], col_w=[2.4, 2.0, 6.2, 4.8])
@@ -477,6 +635,9 @@ def build(images_only):
                      ("func", H_func), ("design", H_design), ("test", H_test)]:
         assert el is not None, f"未找到标题：{name}"
 
+    # 封面：项目组名 / 选题 / 成员
+    fill_title(doc)
+
     # 清理模板占位
     delete_between(H_photo, H_goal)
     delete_between(H_goal, H_content)
@@ -499,6 +660,5 @@ def build(images_only):
 
 
 if __name__ == "__main__":
-    build(images_only=False)
-    build(images_only=True)
+    build(images_only=False)  # 仅生成完整版
     print("完成。")
