@@ -120,56 +120,73 @@ GROUP_NAME = "大梦一瓜"
 TOPIC = "题目二　智能校园自习室预约管理平台"
 
 
-def _set_text(par, text, size=14, bold=False):
-    for r in list(par.runs):
-        r._element.getparent().remove(r._element)
-    run = par.add_run(text)
-    run.font.name = BODY_FONT
-    run.font.size = Pt(size)
-    run.font.bold = bold
-    _ea(run, BODY_FONT)
+def _underlined_run(par):
+    """返回该填空段中带下划线的空格 run（即下划线本身）。"""
+    for r in par.runs:
+        if r.font.underline:
+            return r
+    return par.runs[-1] if par.runs else None
 
 
-def _append_text(par, text, bold=True):
-    ref_size = None
-    if par.runs and par.runs[-1].font.size:
-        ref_size = par.runs[-1].font.size
-    run = par.add_run(text)
-    run.font.name = BODY_FONT
-    run.font.bold = bold
-    if ref_size:
-        run.font.size = ref_size
-    _ea(run, BODY_FONT)
+def _fill_line(par, value):
+    """把值填到下划线上：只改下划线 run 文本，保留其下划线/加粗/字号格式。"""
+    r = _underlined_run(par)
+    if r is None:
+        return
+    orig = r.text
+    tail = " " * max(6, len(orig) - len(value) - 2)  # 保留一段延伸下划线
+    r.text = " " + value + tail
+
+
+def _fill_member(par, name, num):
+    """姓名学号行：下划线含全角空格分隔姓名区/学号区，分别填入。"""
+    r = _underlined_run(par)
+    if r is None:
+        return
+    orig = r.text
+    if "　" in orig:
+        left, right = orig.split("　", 1)
+        lpad = " " * max(2, len(left) - len(name) - 1)
+        rpad = " " * max(2, len(right) - len(num) - 1)
+        r.text = " " + name + lpad + "　" + " " + num + rpad
+    else:
+        r.text = " " + name + "    " + num + "     "
 
 
 def fill_title(doc):
+    import re
     from copy import deepcopy
-    name_slots = []
+    topic_par = group_par = None
+    slots = []
     for ch in list(doc.element.body.iterchildren()):
         if not ch.tag.endswith("}p"):
             continue
         par = Paragraph(ch, doc._body)
-        t = par.text.strip()
-        if t == "课程项目":
-            nxt = ch.getnext()
-            if nxt is not None and nxt.tag.endswith("}p"):
-                _set_text(Paragraph(nxt, doc._body), TOPIC, size=15, bold=True)
-        elif t.replace(" ", "") == "项目组":
-            _append_text(par, f"　（{GROUP_NAME}）")
-        elif t == "姓名学号":
-            name_slots.append(par)
-    for i, par in enumerate(name_slots):
+        squeezed = re.sub(r"\s", "", par.text)  # 去除半角与全角空白
+        # 精确匹配封面填空标签（避免匹配到正文“项目组合影和分工介绍”标题）
+        if squeezed == "课程项目":
+            topic_par = par
+        elif squeezed == "项目组":
+            group_par = par
+        elif squeezed == "姓名学号":
+            slots.append(par)
+    # 成员多于模板槽位时，按最后一个空槽复制补足（保留下划线格式）
+    if slots and len(MEMBERS) > len(slots):
+        last_el = slots[-1]._p
+        for _ in range(len(MEMBERS) - len(slots)):
+            newp = deepcopy(last_el)
+            last_el.addnext(newp)
+            last_el = newp
+            slots.append(Paragraph(newp, doc._body))
+    if topic_par:
+        _fill_line(topic_par, TOPIC)
+    if group_par:
+        _fill_line(group_par, GROUP_NAME)
+    for i, par in enumerate(slots):
         if i < len(MEMBERS):
-            _set_text(par, f"{MEMBERS[i][0]}    {MEMBERS[i][1]}", size=14)
+            _fill_member(par, MEMBERS[i][0], MEMBERS[i][1])
         else:
-            _set_text(par, "", size=14)
-    if name_slots:
-        last = name_slots[-1]._p
-        for j in range(len(name_slots), len(MEMBERS)):
-            newp = deepcopy(last)
-            last.addnext(newp)
-            last = newp
-            _set_text(Paragraph(newp, doc._body), f"{MEMBERS[j][0]}    {MEMBERS[j][1]}", size=14)
+            _fill_member(par, "", "")
 
 
 class Cursor:
