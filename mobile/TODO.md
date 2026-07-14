@@ -1,14 +1,11 @@
 # Mobile TODO
 
 ## 待办
-- [ ] **部署后端后更新移动端默认后端地址**（当前留空）
-  - 位置：
-    - `mobile/shared/src/androidMain/kotlin/com/seatwise/mobile/Platform.android.kt` → `platformBaseUrl`
-    - `mobile/shared/src/iosMain/kotlin/com/seatwise/mobile/Platform.ios.kt` → `platformBaseUrl`
-  - 现状：默认 `""`（留空），需在登录页手动输入后端地址才能登录。
-  - 部署后：改为实际公网/LAN 地址，例如 `http://<server-ip>:18080` 或 `https://api.example.com`，
-    并重新触发 CI 构建，产物即内置该默认地址（用户无需手填）。
-  - 责任：**等用户部署后端并给出访问地址后，由我更新并重新构建。**
+- [ ] **重新触发 CI 出双端产物**（内置新默认地址 `http://java.vintces.icu`）
+  - 后端已部署到 `java.vintces.icu`（nginx:80 反代 → 后端 /api），默认地址已在
+    `Platform.android.kt` / `Platform.ios.kt` 的 `platformBaseUrl` 填为 `http://java.vintces.icu`。
+  - 需在 GitHub Actions 手动 Run workflow（或 push `mobile/**`）重新构建，
+    产物 APK/IPA 即内置该地址、用户无需手填。（Actions 若关闭需先在仓库 Settings 开启。）
 
 ## 已完成
 - [x] KMP + Compose Multiplatform 学生端（登录/自习室/选座预约/我的预约）

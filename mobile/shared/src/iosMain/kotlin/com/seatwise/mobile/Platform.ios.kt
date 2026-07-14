@@ -5,9 +5,9 @@ import platform.Foundation.NSCalendarUnitDay
 import platform.Foundation.NSDate
 import platform.Foundation.NSDateFormatter
 
-// TODO(部署后填写): 后端尚未部署，默认地址留空。部署后改为公网/LAN 地址。
-// 目前可在登录页手动输入；iOS 模拟器访问本机后端用 http://localhost:18080
-actual val platformBaseUrl: String = ""
+// 生产后端地址：经 java.vintces.icu (nginx:80) 反代到后端 /api。
+// 登录页仍可手动覆盖；iOS 模拟器访问本机后端可改用 http://localhost:18080
+actual val platformBaseUrl: String = "http://java.vintces.icu"
 
 actual fun tomorrowDate(): String {
     val cal = NSCalendar.currentCalendar
