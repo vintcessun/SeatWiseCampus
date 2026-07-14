@@ -11,3 +11,7 @@ target/
 *.log
 
 dist-mobile/
+
+# Python 缓存
+__pycache__/
+*.pyc
