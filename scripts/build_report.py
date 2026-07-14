@@ -118,6 +118,7 @@ MEMBERS = [
 ]
 GROUP_NAME = "大梦一瓜"
 TOPIC = "题目二　智能校园自习室预约管理平台"
+PHOTO = os.path.join(OUT_DIR, "合照.png")  # 项目组合影
 
 
 def _underlined_run(par):
@@ -207,7 +208,7 @@ class Cursor:
         para.paragraph_format.space_before = Pt(10)
         para.paragraph_format.space_after = Pt(4)
         para.paragraph_format.line_spacing = 1.4
-        _fmt(para.add_run(text), font=HEAD_FONT, size=size, bold=True, color="1F3864")
+        _fmt(para.add_run(text), font=HEAD_FONT, size=size, bold=True, color="000000")
         return para
 
     # 正文（images_only 时跳过）
@@ -218,7 +219,7 @@ class Cursor:
         para.paragraph_format.line_spacing = 1.5
         para.paragraph_format.space_after = Pt(4)
         para.paragraph_format.first_line_indent = Pt(24)
-        _fmt(para.add_run(text), font=BODY_FONT, size=12)
+        _fmt(para.add_run(text), font=BODY_FONT, size=12, color="000000")
         return para
 
     def bullet(self, label, text=""):
@@ -230,12 +231,12 @@ class Cursor:
         r = para.add_run("· ")
         _fmt(r, font=BODY_FONT, size=12, bold=True, color="3B6CFF")
         if label:
-            _fmt(para.add_run(label + ("：" if text else "")), size=12, bold=True, color="1F3864")
+            _fmt(para.add_run(label + ("：" if text else "")), size=12, bold=True, color="000000")
         if text:
-            _fmt(para.add_run(text), size=12)
+            _fmt(para.add_run(text), size=12, color="000000")
         return para
 
-    def image(self, filename):
+    def image(self, filename, max_w_cm=None):
         path = filename if os.path.isabs(filename) else os.path.join(FIG, filename)
         para = self._add_p_after()
         para.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -249,7 +250,7 @@ class Cursor:
         if h > w * 1.25:
             run.add_picture(path, height=Cm(PORTRAIT_H_CM))
         else:
-            run.add_picture(path, width=Cm(CONTENT_W_CM))
+            run.add_picture(path, width=Cm(max_w_cm or CONTENT_W_CM))
         return para
 
     def caption(self, text):
@@ -259,8 +260,8 @@ class Cursor:
         _fmt(para.add_run(text), font=BODY_FONT, size=10.5, color="595959")
         return para
 
-    def figure(self, imgfile, name):
-        self.image(imgfile)
+    def figure(self, imgfile, name, max_w_cm=None):
+        self.image(imgfile, max_w_cm=max_w_cm)
         self.caption(f"{next_fig()}    {name}")
 
     def code(self, label, text):
@@ -269,7 +270,7 @@ class Cursor:
             lab = self._add_p_after()
             lab.paragraph_format.space_before = Pt(4)
             lab.paragraph_format.space_after = Pt(2)
-            _fmt(lab.add_run("核心代码：" + label), font=BODY_FONT, size=10.5, bold=True, color="1F3864")
+            _fmt(lab.add_run("核心代码：" + label), font=BODY_FONT, size=10.5, bold=True, color="000000")
         para = self._add_p_after()
         para.alignment = WD_ALIGN_PARAGRAPH.LEFT
         para.paragraph_format.left_indent = Pt(10)
@@ -304,12 +305,12 @@ class Cursor:
         for j, htext in enumerate(header):
             c = tbl.rows[0].cells[j]
             c.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
-            _fmt(c.paragraphs[0].add_run(htext), font=HEAD_FONT, size=10.5, bold=True)
+            _fmt(c.paragraphs[0].add_run(htext), font=HEAD_FONT, size=10.5, bold=True, color="000000")
             _shade(c, "D9E2F3")
         for row in rows:
             cells = tbl.add_row().cells
             for j, val in enumerate(row):
-                _fmt(cells[j].paragraphs[0].add_run(str(val)), font=BODY_FONT, size=10.5)
+                _fmt(cells[j].paragraphs[0].add_run(str(val)), font=BODY_FONT, size=10.5, color="000000")
         if col_w:
             for j, wcm in enumerate(col_w):
                 for r in tbl.rows:
@@ -358,12 +359,8 @@ def build_photo(c):
         "项目成员与分工",
         col_w=[3.0, 5.0, 7.4],
     )
-    # 合影占位
-    ph = c._add_p_after()
-    ph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    ph.paragraph_format.space_before = Pt(6)
-    _fmt(ph.add_run("（此处插入项目组合影）"), font=BODY_FONT, size=12, italic=True, color="999999")
-    c.caption(f"{next_fig()}    项目组合影")
+    c.body("项目组全体成员合影如下图所示。")
+    c.figure(PHOTO, "项目组合影", max_w_cm=12.0)
 
 
 def build_goal(c):
@@ -398,7 +395,7 @@ def build_func(c):
             ["实时看板", "座位热力图（空闲/已约/使用中/禁用 + 本人高亮）；初始化快照 + SSE 增量，多客户端秒级同步", "MVP"],
             ["数据报表", "使用率、热门时段、取消率、爽约率、利用率排行，可按校区/楼栋/自习室筛选", "MVP"],
             ["积分排名", "守约加分、爽约扣分，按周/月生成排行榜（与黑名单解耦）", "MVP+"],
-            ["附近空位", "按“同楼栋 > 距离最近 > 空位更多”推荐可用自习室", "MVP+"],
+            ["位置与附近空位", "管理端接入地图选点维护楼栋经纬度；学生端浏览器定位识别最近楼栋，按“同楼栋 > 距离最近 > 空位更多”推荐可用自习室", "MVP+"],
             ["智能与扩展", "AI 选座助手、站内通知中心、满座候补、组队原子预约、专注番茄钟、自习报告、历史回放", "扩展"],
         ],
         "功能需求一览",
@@ -498,8 +495,9 @@ TEST_SECTIONS = [
     ("3.1  测试环境与方法",
      "测试在 Docker Compose 环境下进行（前端 Nginx:8888、后端 Spring Boot:18080、MySQL 8、Redis 7），"
      "采用“自动化冒烟/并发脚本 + 真实 Chrome 多端页面走查”相结合的方式。自动化脚本覆盖登录、看板、预约、重复预约拒绝、"
-     "8 并发仅 1 成功、签到签退、座位释放、单日限次、报表、权限等 13 项核心用例并全部通过（见下表）；"
-     "页面走查覆盖学生端 9 页、管理端 10 页在桌面/iOS/Android、中英双语、明暗主题下的表现，均无控制台错误。",
+     "8 并发仅 1 成功、签到签退、座位释放、单日限次、报表、权限等 13 项核心用例并全部通过，地图选点、定位推荐与专注番茄钟"
+     "等交互功能则以页面走查验证，全部用例与结果见下表；页面走查覆盖学生端 9 页、管理端 10 页在桌面/iOS/Android、中英双语、"
+     "明暗主题下的表现，均无控制台错误。",
      []),
     ("3.2  登录与权限",
      "系统提供学生/管理员两类角色登录及注册、找回密码、图形验证码等能力，登录后由 Sa-Token 维护登录态与角色鉴权，"
@@ -516,20 +514,36 @@ TEST_SECTIONS = [
      [(sp("scripts/report/shots/09-admin-board.png"), "管理端实时看板"),
       (sp("scripts/report/desktop/admin-spacetime.png"), "时空占用图")]),
     ("3.5  管理与运营",
-     "管理端提供概览驾驶舱、座位排布可视化编辑器与黑名单管理等能力，支持自习室/座位维护、爽约用户查看与解禁等运营操作。",
+     "管理端提供概览驾驶舱、座位排布可视化编辑器与黑名单管理等能力，支持自习室/座位维护、爽约用户查看与解禁等运营操作。"
+     "座位排布编辑器支持逐格设置座位/过道/空位/禁用位以适配多过道与不规则房间，并可在网格四周放置“门”与“讲台”边缘标记"
+     "（不占用座位），使座位图与真实教室方位一致，便于学生按门与讲台的位置选座。",
      [(sp("scripts/report/desktop/admin-dashboard.png"), "管理台概览"),
-      (sp("scripts/report/shots/35-layout-edit.png"), "座位排布编辑器"),
+      (sp("scripts/report/shots/42-门和讲台的形式.png"), "座位排布编辑器（含门 / 讲台边缘标记）"),
       (sp("scripts/report/shots/11-admin-blacklist.png"), "黑名单管理")]),
     ("3.6  数据报表与积分排行",
      "系统基于聚合口径生成使用率、取消率、爽约率、热门时段与利用率排行等报表，并按守约/爽约规则结算积分、生成积分排行榜。",
      [(sp("scripts/report/desktop/admin-reports.png"), "数据报表"),
       (sp("scripts/report/desktop/student-ranking.png"), "积分排行榜")]),
-    ("3.7  智能与工程化",
+    ("3.7  地图选点与定位推荐最近自习室",
+     "为支撑“按距离推荐”，系统接入地图服务（Leaflet + 高德地图瓦片）实现楼栋坐标的可视化维护：管理员在“位置管理”中点击"
+     "「地图选点」，即可在卫星底图上直接点选或拖拽标记确定楼栋位置，实时回显所选经纬度（下图中为“图书馆C座”选点，"
+     "纬度 24.605766、经度 118.311826），确认后保存，免去手工输入坐标的麻烦。"
+     "学生端“附近空位”则据此实现定位推荐：点击「定位」后读取浏览器当前位置，与各楼栋坐标计算距离，自动识别最近楼栋"
+     "（下图中定位到“图书馆A座”，约 1742 m），并按“同楼栋 > 距离最近 > 空位更多”的顺序推荐仍有空位的自习室，"
+     "卡片上直接给出距离与实时空位数；无空位的自习室不会被返回。两者构成“管理员维护坐标 → 学生按距离找座”的完整闭环。",
+     [(sp("scripts/report/shots/45-接入地图.png"), "位置管理 · 地图选点维护楼栋坐标"),
+      (sp("scripts/report/shots/43-定位.png"), "定位推荐最近有空位的自习室")]),
+    ("3.8  专注番茄钟",
+     "学生端内置专注番茄钟，采用番茄工作法（25 分钟专注 + 5 分钟短休，每 4 个番茄享受一次长休），"
+     "支持开始/暂停、重置、跳过与三种模式切换，并统计今日完成番茄数、本轮进度与今日专注时长，"
+     "与自习预约配合帮助学生在自习室内保持专注、量化专注成果。",
+     [(sp("scripts/report/shots/44-番茄钟.png"), "专注番茄钟（专注计时进行中）")]),
+    ("3.9  智能与工程化",
      "学生端集成 AI 智能选座助手，可用自然语言表达需求并给出可解释的座位推荐（离线内置规则引擎，亦可接入大模型）；"
      "后端接口经 Knife4j 生成可交互文档，便于联调与验收。",
      [(sp("scripts/report/shots/13-ai-assistant.png"), "AI 选座助手"),
       (sp("scripts/report/shots/12-knife4j.png"), "Knife4j 接口文档")]),
-    ("3.8  多端适配与国际化",
+    ("3.10  多端适配与国际化",
      "前端实现了明暗主题、移动端响应式（iOS / Android）与中英双语国际化。在 iPhone 13 与 Pixel 5 模拟设备上，"
      "侧边栏收起为抽屉式导航、栅格纵向堆叠，无横向溢出；语言切换即时联动界面与组件。",
      [(sp("scripts/report/shots/27-dark-student.png"), "深色模式"),
@@ -554,6 +568,9 @@ TEST_TABLE = (
         ["T11", "实时推送", "一端预约另一端观察", "另一端座位秒级变色", "通过"],
         ["T12", "数据报表", "查看报表页", "口径与聚合一致", "通过"],
         ["T13", "权限校验", "学生访问管理接口", "被拒绝（无权限）", "通过"],
+        ["T14", "地图选点", "位置管理中地图点选楼栋坐标", "回显经纬度并保存成功", "通过"],
+        ["T15", "定位推荐", "点击定位查找附近空位", "识别最近楼栋并按距离+空位推荐", "通过"],
+        ["T16", "专注番茄钟", "开始 25 分钟专注计时", "计时运行并统计番茄数/时长", "通过"],
     ],
     "主要功能测试用例与结果",
 )
@@ -606,16 +623,16 @@ def build_design(c):
         c.sub(title)
         c.body(prose)
         c.figure(img, name)
-        if title.startswith("2.2"):
+        if title.split()[0] == "2.2":
             c.table(DB_TABLE[0], DB_TABLE[1], DB_TABLE[2], col_w=[3.2, 2.4, 1.6, 5.0, 3.2])
-        elif title.startswith("2.3"):
+        elif title.split()[0] == "2.3":
             c.body("时间片换算与拆分的核心代码如下：slotIndex 由“(时*60+分)/片长”计算，预约区间按 [起, 止) 展开为片序号列表。")
             c.code("时间片换算与拆分（SlotUtil）", CODE_SLOT)
-        elif title.startswith("2.4"):
+        elif title.split()[0] == "2.4":
             c.body("并发预约的核心代码如下：先用 Redisson 加锁降低冲突，再在同一事务内插入主记录与逐片占用记录；"
                    "一旦命中唯一索引即抛出 DuplicateKeyException 并回滚，返回“座位已被预约”，从而保证绝不双占。")
             c.code("并发预约与唯一索引兜底（ReservationService）", CODE_RESERVE)
-        elif title.startswith("2.6"):
+        elif title.split()[0] == "2.6":
             c.body("座位状态变更后广播 SSE 增量事件的核心代码如下：")
             c.code("SSE 增量广播（ReservationService）", CODE_SSE)
     c.sub("2.9  核心接口概览")
@@ -631,9 +648,9 @@ def build_test(c):
         c.body(prose)
         for img_abs, name in imgs:
             c.figure(img_abs, name)
-        if title.startswith("3.1"):
+        if title.split()[0] == "3.1":
             c.table(TEST_TABLE[0], TEST_TABLE[1], TEST_TABLE[2], col_w=[1.4, 2.6, 4.4, 4.6, 1.4])
-    c.sub("3.9  测试结论")
+    c.sub("3.11  测试结论")
     c.body("经自动化脚本与多端页面走查验证，系统在并发正确性、实时一致性、座位生命周期闭合、权限控制等核心红线上均达标，"
            "13 项核心用例全部通过，桌面与移动多端、中英双语、明暗主题下均运行正常、无控制台错误，满足预期设计目标。")
 
