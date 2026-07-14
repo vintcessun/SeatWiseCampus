@@ -1,0 +1,21 @@
+{
+  "name": "seatwise-demo",
+  "private": true,
+  "type": "module",
+  "description": "SeatWise Campus 双层演示框架：Playwright 关键操作（上层） + API 多人/背景（下层）",
+  "scripts": {
+    "stage": "node stage.mjs",
+    "race": "node race.mjs",
+    "waitlist": "node waitlist-demo.mjs",
+    "group": "node group-demo.mjs",
+    "hold": "node hold-demo.mjs",
+    "timeout": "node timeout-demo.mjs",
+    "seed-demo": "node seed-demo.mjs",
+    "seed-replay": "node seed-replay.mjs",
+    "smoke": "node smoke-test.mjs",
+    "demo": "node run.mjs"
+  },
+  "dependencies": {
+    "playwright-core": "^1.49.0"
+  }
+}
