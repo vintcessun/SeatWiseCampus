@@ -6,7 +6,6 @@
         <div class="page-sub">新增自习室、维护座位排布（生成/启用/禁用）、查看实时看板</div>
       </div>
       <div style="display:flex;gap:8px">
-        <el-button :icon="OfficeBuilding" @click="bldDialog = true">新增楼栋</el-button>
         <el-button type="primary" :icon="Plus" @click="openCreate">新增自习室</el-button>
       </div>
     </div>
@@ -59,26 +58,12 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="bldDialog" title="新增楼栋" width="420px">
-      <el-form label-width="90px">
-        <el-form-item label="所属校区">
-          <el-select v-model="bldForm.campusId" placeholder="选择校区" style="width:100%">
-            <el-option v-for="c in campuses" :key="c.id" :label="c.name" :value="c.id" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="楼栋名称"><el-input v-model="bldForm.name" placeholder="如 图书馆B座" /></el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="bldDialog=false">取消</el-button>
-        <el-button type="primary" :loading="bldSaving" @click="saveBuilding">创建</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { Plus, OfficeBuilding } from '@element-plus/icons-vue'
+import { Plus } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { baseApi } from '../../api'
 
@@ -88,9 +73,6 @@ const campuses = ref([])
 const dialog = ref(false)
 const saving = ref(false)
 const form = reactive({ buildingId: null, name: '', floorNo: 1, openStart: '08:00', openEnd: '22:00' })
-const bldDialog = ref(false)
-const bldSaving = ref(false)
-const bldForm = reactive({ campusId: null, name: '' })
 
 onMounted(loadAll)
 async function loadAll() {
@@ -99,19 +81,6 @@ async function loadAll() {
   for (const c of campuses.value) bs = bs.concat(await baseApi.buildings(c.id))
   buildings.value = bs
   rooms.value = await baseApi.rooms({})
-  if (!bldForm.campusId && campuses.value.length) bldForm.campusId = campuses.value[0].id
-}
-
-async function saveBuilding() {
-  if (!bldForm.campusId || !bldForm.name) { ElMessage.warning('请选择校区并填写名称'); return }
-  bldSaving.value = true
-  try {
-    await baseApi.createBuilding({ campusId: bldForm.campusId, name: bldForm.name })
-    ElMessage.success('楼栋已创建')
-    bldDialog.value = false
-    bldForm.name = ''
-    await loadAll()
-  } catch (e) { /* 拦截器提示 */ } finally { bldSaving.value = false }
 }
 
 async function removeRoom(row) {

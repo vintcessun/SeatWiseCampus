@@ -1,7 +1,12 @@
 <template>
   <div class="page">
-    <div class="page-title">位置管理</div>
-    <div class="page-sub">维护楼栋经纬度 — 点击地图选点，或手动输入坐标</div>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div class="page-title">位置管理</div>
+        <div class="page-sub">新增楼栋、维护楼栋经纬度 — 点击地图选点，或手动输入坐标</div>
+      </div>
+      <el-button type="primary" :icon="OfficeBuilding" @click="bldDialog = true">新增楼栋</el-button>
+    </div>
 
     <el-card shadow="never">
       <el-table :data="buildings" style="width:100%">
@@ -30,6 +35,21 @@
       </el-table>
     </el-card>
 
+    <el-dialog v-model="bldDialog" title="新增楼栋" width="420px">
+      <el-form label-width="90px">
+        <el-form-item label="所属校区">
+          <el-select v-model="bldForm.campusId" placeholder="选择校区" style="width:100%">
+            <el-option v-for="c in campuses" :key="c.id" :label="c.name" :value="c.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="楼栋名称"><el-input v-model="bldForm.name" placeholder="如 图书馆B座" /></el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="bldDialog=false">取消</el-button>
+        <el-button type="primary" :loading="bldSaving" @click="saveBuilding">创建</el-button>
+      </template>
+    </el-dialog>
+
     <el-dialog v-model="mapDialog" :title="'地图选点 — ' + (mapTarget?.name || '')" width="700px" @opened="openMap" @closed="closeMap">
       <div ref="mapContainer" style="height:400px;width:100%;border-radius:8px"></div>
       <div v-if="mapLat !== null" style="margin-top:10px;font-size:14px;color:#606266">
@@ -44,8 +64,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, reactive, onMounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
+import { OfficeBuilding } from '@element-plus/icons-vue'
 import { baseApi } from '../../api'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -58,6 +79,9 @@ L.Icon.Default.mergeOptions({ iconUrl, iconRetinaUrl, shadowUrl })
 
 const buildings = ref([])
 const campuses = ref([])
+const bldDialog = ref(false)
+const bldSaving = ref(false)
+const bldForm = reactive({ campusId: null, name: '' })
 const mapDialog = ref(false)
 const mapTarget = ref(null)
 const mapContainer = ref(null)
@@ -66,7 +90,8 @@ const mapLng = ref(null)
 let mapInstance = null
 let mapMarker = null
 
-onMounted(async () => {
+onMounted(loadAll)
+async function loadAll() {
   campuses.value = await baseApi.campuses()
   let bs = []
   for (const c of campuses.value) bs = bs.concat(await baseApi.buildings(c.id))
@@ -75,8 +100,21 @@ onMounted(async () => {
     latitude: b.latitude != null ? Number(b.latitude) : null,
     longitude: b.longitude != null ? Number(b.longitude) : null
   }))
-})
+  if (!bldForm.campusId && campuses.value.length) bldForm.campusId = campuses.value[0].id
+}
 function campusName(id) { return campuses.value.find(c => c.id === id)?.name || '' }
+
+async function saveBuilding() {
+  if (!bldForm.campusId || !bldForm.name) { ElMessage.warning('请选择校区并填写名称'); return }
+  bldSaving.value = true
+  try {
+    await baseApi.createBuilding({ campusId: bldForm.campusId, name: bldForm.name })
+    ElMessage.success('楼栋已创建，请为其设置坐标')
+    bldDialog.value = false
+    bldForm.name = ''
+    await loadAll()
+  } catch (e) { /* 拦截器提示 */ } finally { bldSaving.value = false }
+}
 
 const dirty = new Set()
 function onEdit(row) { dirty.add(row.id) }
